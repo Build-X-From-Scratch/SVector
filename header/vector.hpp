@@ -1,6 +1,7 @@
 #ifndef __VECTOR
 #define __VECTOR
 #include <cstddef>
+#include <iterator>
 #include <memory>
 #include <initializer_list>
 template <typename T,typename Allocator = std::allocator<T>>
@@ -31,9 +32,32 @@ class Vector{
                 arr[it] = array[it];
             }
         }
-    // private:
-    //     class Iterator{
+    private:
+        class Iterator{
+            private:
+                T* ptr;
+            public: 
+                using iterator_category = std::random_access_iterator_tag;
+                using value_type        = T;
+                using difference_type   = std::ptrdiff_t;
+                using pointer           = T*;
+                using reference         = T&;
+            public: 
+                Iterator(T* p = nullptr):ptr(p){}
 
-    //     };
+                //deference 
+                T& operator*()const{
+                    return *ptr;
+                }
+                Iterator& operator++(){
+                    ++ptr;
+                    return *this;
+                }
+                Iterator operator++(int){
+                    Iterator temp = *this;
+                    ++ptr;
+                    return temp;
+                }
+        };
 };
 #endif
