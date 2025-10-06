@@ -13,10 +13,17 @@ class Vector{
     private://abstraksi untuk helper allocator
         using element_traits = std::allocator_traits<Allocator>;
         Allocator alloc;
+    private:
+        T create_element(std::size_t pos,const T& value){
+            return element_traits::construct(alloc,std::addressof(arr[pos]),value);    
+        }   
+        void destroy(std::size_t pos){
+            element_traits::destroy(alloc,std::addressof(arr[pos]));
+        }
     public: 
         Vector(){
             this->size = 0;
-            this->capacity = 0;
+            this->capacity = 1;
             this->arr = element_traits::allocate(alloc,capacity);
         }
         Vector(std::size_t capacity){
@@ -29,7 +36,7 @@ class Vector{
             this->capacity = array.size();
             this->arr = element_traits::allocate(alloc,capacity);
             for(auto it = array.begin();it != array.end();it++){
-                arr[it] = array[it];
+                create_element(it, *arr);
             }
         }
     private:
@@ -37,6 +44,7 @@ class Vector{
             private:
                 T* ptr;
             public: 
+                //iterator traits
                 using iterator_category = std::random_access_iterator_tag;
                 using value_type        = T;
                 using difference_type   = std::ptrdiff_t;
@@ -58,6 +66,46 @@ class Vector{
                     ++ptr;
                     return temp;
                 }
+                bool operator==(const Iterator& others){
+                    return ptr == others.ptr;
+                }
+                bool operator!=(const Iterator& others){
+                    return ptr != others.ptr;
+                }
         };
+    public: 
+        Iterator begin()const{
+            return arr;
+        }
+        Iterator cbegin()const noexcept{
+            return arr;
+        }
+        Iterator end()const{
+            return (arr + size);
+        }
+        Iterator cend()const noexcept{
+            return (arr + size);
+        }
+        Iterator rbegin()const{
+            return (arr + size);
+        }
+        Iterator rend()const{
+            return arr;
+        }
+        Iterator crend()const noexcept{
+            return arr;
+        }
+        Iterator crbegin()const noexcept{
+            return (arr + size);
+        }
+    public: //getter
+
+    public: 
+        void clear(){
+            for(int i = 0;i < size;i++){ 
+                element_traits::destroy(alloc,std::addressof(arr));  
+            }
+            element_traits::deallocate(alloc,capacity);
+        }
 };
 #endif
