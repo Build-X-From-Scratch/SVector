@@ -4,6 +4,7 @@
 #include <iterator>
 #include <memory>
 #include <initializer_list>
+#include <stdexcept>
 template <typename T,typename Allocator = std::allocator<T>>
 class Vector{
     private:
@@ -14,8 +15,8 @@ class Vector{
         using element_traits = std::allocator_traits<Allocator>;
         Allocator alloc;
     private:
-        T create_element(std::size_t pos,const T& value){
-            return element_traits::construct(alloc,std::addressof(arr[pos]),value);    
+        void create_element(std::size_t pos,const T& value){
+            element_traits::construct(alloc,std::addressof(arr[pos]),value);    
         }   
         void destroy(std::size_t pos){
             element_traits::destroy(alloc,std::addressof(arr[pos]));
@@ -99,13 +100,55 @@ class Vector{
             return (arr + size);
         }
     public: //getter
-
+        int get_size(){
+            return this->size;
+        }
+        int get_capacity(){
+            return this->capacity;
+        }
+        bool ensure_capacity(){
+            if(size + 1 <= capacity){
+                return true;
+            }
+            return false;
+        }
+    public:
+        void push_back(const T& value){
+            if(capacity == size){
+                //buat method grow
+            }
+            if(ensure_capacity()){
+                //method disni
+            }else{
+                //metod resize atau grow munkin
+            }
+            create_element(0, value);
+            size++;
+        }
+        void pop_back(){
+            if(size == 0){
+                throw std::runtime_error("container is empty");
+            }
+            destroy(size - 1);
+            size--;
+        }
+    private:
+        void grow(){
+            T* temp = element_traits::allocate(capacity * 2);
+            capacity *= 2;
+            for(int i = 0;i < capacity;i++){
+                create_element(i, arr[i]);
+            }
+            clear();
+            arr = temp;
+        }
     public: 
         void clear(){
             for(int i = 0;i < size;i++){ 
-                element_traits::destroy(alloc,std::addressof(arr));  
+                element_traits::destroy(alloc,std::addressof(arr[i]));  
             }
-            element_traits::deallocate(alloc,capacity);
+            element_traits::deallocate(alloc,arr,capacity);
+            size = 0;
         }
 };
 #endif
