@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
+#include <iostream>
 #include <initializer_list>
 #include <stdexcept>
 template <typename T,typename Allocator = std::allocator<T>>
@@ -22,6 +23,7 @@ class Vector{
             element_traits::destroy(alloc,std::addressof(arr[pos]));
         }
     public: 
+        friend class Iterator;
         Vector(){
             this->size = 0;
             this->capacity = 1;
@@ -40,10 +42,16 @@ class Vector{
                 create_element(it, *arr);
             }
         }
+        ~Vector(){
+            free_storage();
+        }
     private:
         class Iterator{
             private:
                 T* ptr;
+                Vector& vector_ref;
+            public:
+                Iterator(Vector& outer): vector_ref(outer){}
             public: 
                 //iterator traits
                 using iterator_category = std::random_access_iterator_tag;
@@ -51,6 +59,7 @@ class Vector{
                 using difference_type   = std::ptrdiff_t;
                 using pointer           = T*;
                 using reference         = T&;
+                friend class Vector;
             public: 
                 Iterator(T* p = nullptr):ptr(p){}
 
@@ -72,6 +81,12 @@ class Vector{
                 }
                 bool operator!=(const Iterator& others){
                     return ptr != others.ptr;
+                }
+                reference operator[](std::size_t pos){
+                    if (pos >= vector_ref.size) {
+                        throw std::out_of_range("Index out of range");
+                    }
+                    return vector_ref.arr[pos];
                 }
         };
     public: 
@@ -112,17 +127,44 @@ class Vector{
             }
             return false;
         }
-    public:
-        void push_back(const T& value){
-            if(capacity == size){
-                //buat method grow
+        T& at(std::size_t pos){
+            if(pos >= size){
+                throw std::out_of_range("behavior is undefined"); //refactor disni
             }
+            return arr[pos];
+        }
+        const T& at(std::size_t pos)const{
+            if(pos >= size){
+                throw std::out_of_range("behavior is undefined"); //refactor disni
+            }
+            return arr[pos];
+        }
+    public:
+        void push_front(const T& value){
             if(ensure_capacity()){
-                //method disni
+                create_element(size, value);
+                for(int i = size;i > 0;i--){
+                    arr[i] = arr[i - 1];
+                }
+                size++;
+                arr[0] = value;
             }else{
-                //metod resize atau grow munkin
+                grow();
+                create_element(size, value);
+                for(int i = size;i > 0;i--){
+                    arr[i] = arr[i - 1];
+                }
+                size++;
+                arr[0] = value;
             }
             create_element(0, value);
+            size++;
+        }
+        void push_back(const T& value){
+            if(size == capacity){
+                grow();
+            }
+            create_element(size, value);
             size++;
         }
         void pop_back(){
@@ -132,6 +174,16 @@ class Vector{
             destroy(size - 1);
             size--;
         }
+        void pop_front(){
+            if(size == 0){
+                //throw
+            }
+            for(int i = 1;i < size;i++){
+                arr[i - 1] = arr[i];
+            }
+            destroy(arr[size -1]);
+            size--;
+        }
     private:
         void grow(){
             T* temp = element_traits::allocate(capacity * 2);
@@ -139,7 +191,7 @@ class Vector{
             for(int i = 0;i < capacity;i++){
                 create_element(i, arr[i]);
             }
-            clear();
+            free_storage();
             arr = temp;
         }
     public: 
@@ -147,8 +199,21 @@ class Vector{
             for(int i = 0;i < size;i++){ 
                 element_traits::destroy(alloc,std::addressof(arr[i]));  
             }
-            element_traits::deallocate(alloc,arr,capacity);
             size = 0;
+        }
+    private:
+        void free_storage(){
+            for(int i = 0;i < size;i++){ 
+                element_traits::destroy(alloc,std::addressof(arr[i]));  
+            }
+            element_traits::deallocate(alloc,arr,capacity);
+            size = 0;      
+        }
+    public:
+        void print()const noexcept{
+            for(int i = 0;i < size;i++){
+                std::cout << arr[i] << std::endl;
+            }
         }
 };
 #endif
