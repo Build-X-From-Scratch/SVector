@@ -133,6 +133,12 @@ class Vector{
             }
             return arr[pos];
         }
+        T& back()const noexcept{
+            return arr[size - 1];
+        }
+        T& front()const noexcept{
+            return arr[0];
+        }
         const T& at(std::size_t pos)const{
             if(pos >= size){
                 throw std::out_of_range("behavior is undefined"); //refactor disni
@@ -184,6 +190,8 @@ class Vector{
             destroy(arr[size -1]);
             size--;
         }
+    public:
+        
     private:
         void grow(){
             T* temp = element_traits::allocate(capacity * 2);
