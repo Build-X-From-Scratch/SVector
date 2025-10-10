@@ -191,7 +191,19 @@ class Vector{
             size--;
         }
     public:
-        
+        void insert(std::size_t pos,const T& val){
+            if(pos == 0){
+                for(int i = 1;i < size;i++){
+                    arr[i] = arr[i + 1];
+                }
+                create_element(0,val);
+            }else{
+                for(size_t i = pos;i < size;i++){
+                    arr[i] = arr[i + 1]; //geser kekanan
+                }
+                create_element(pos,val);
+            }
+        }
     private:
         void grow(){
             T* temp = element_traits::allocate(capacity * 2);
@@ -201,6 +213,31 @@ class Vector{
             }
             free_storage();
             arr = temp;
+        }
+        void resize(std::size_t n){
+            resize(n,T{});
+        }
+        void reserve(std::size_t n){
+            element_traits::allocate(alloc,n);
+        }
+        void resize(std::size_t n,const T& val){
+            if(n == size){
+                return;
+            }else if(n < size){
+                for(size_t i = size;i > n;i--){
+                    destroy(i);
+                }
+                size = n;
+                return;
+            }
+            if(n > capacity){
+                reserve(recomended_cap(n));
+                for(int i = 0;i < capacity;i++){
+                    create_element(1,val);
+                }
+                size = n;
+            }
+
         }
     public: 
         void clear(){
@@ -216,6 +253,10 @@ class Vector{
             }
             element_traits::deallocate(alloc,arr,capacity);
             size = 0;      
+        }
+        std::size_t recomended_cap(std::size_t need)const{
+            std::size_t grow = capacity ? capacity * 2 : 1;
+            return grow < need ? need : grow;
         }
     public:
         void print()const noexcept{
