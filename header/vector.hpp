@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 #include <initializer_list>
+#include <ostream>
 #include <stdexcept>
 template <typename T,typename Allocator = std::allocator<T>>
 class Vector{
@@ -24,6 +25,8 @@ class Vector{
         }
     public: 
         friend class Iterator;
+        template <typename U>
+        friend std::ostream& operator<<(std::ostream& os,const Vector<U>& others);
         Vector(){
             this->size = 0;
             this->capacity = 1;
@@ -36,10 +39,26 @@ class Vector{
         }
         Vector(std::initializer_list<T>array){
             this->size = array.size();
-            this->capacity = array.size();
+            this->capacity = array.size() * 2; //doubling
             this->arr = element_traits::allocate(alloc,capacity);
-            for(auto it = array.begin();it != array.end();it++){
-                create_element(it, *arr);
+            int i = 0;
+            for(const T& x: array){
+                element_traits::construct(alloc,std::addressof(arr[i]),x);
+                i++;
+            }
+        }
+        //copy constructor
+        Vector operator==(const Vector& others){
+            if(this == &others){//self copy
+                return;
+            }
+            size = others.size;
+            capacity = others.capacity;
+            arr = element_traits::allocate(alloc,capacity);
+            int i = 0;
+            for(const T& x: others.arr){
+                element_traits::construct(alloc,std::addressof(arr[i]),x);
+                i++;
             }
         }
         ~Vector(){
@@ -49,9 +68,6 @@ class Vector{
         class Iterator{
             private:
                 T* ptr;
-                Vector& vector_ref;
-            public:
-                Iterator(Vector& outer): vector_ref(outer){}
             public: 
                 //iterator traits
                 using iterator_category = std::random_access_iterator_tag;
@@ -82,12 +98,6 @@ class Vector{
                 bool operator!=(const Iterator& others){
                     return ptr != others.ptr;
                 }
-                reference operator[](std::size_t pos){
-                    if (pos >= vector_ref.size) {
-                        throw std::out_of_range("Index out of range");
-                    }
-                    return vector_ref.arr[pos];
-                }
         };
     public: 
         Iterator begin()const{
@@ -113,6 +123,18 @@ class Vector{
         }
         Iterator crbegin()const noexcept{
             return (arr + size);
+        }
+        T& operator[](std::size_t pos){
+            if(pos > size){
+                throw std::out_of_range("Index out of range");
+            }
+            return arr[pos];
+        }
+         const T& operator[](std::size_t pos)const{
+            if(pos > size){
+                throw std::out_of_range("Index out of range");
+            }
+            return arr[pos]; 
         }
     public: //getter
         int get_size(){
@@ -192,16 +214,30 @@ class Vector{
         }
     public:
         void insert(std::size_t pos,const T& val){
+            if(size + 1 >= capacity){
+                grow();
+            }
             if(pos == 0){
                 for(int i = 1;i < size;i++){
                     arr[i] = arr[i + 1];
                 }
                 create_element(0,val);
             }else{
-                for(size_t i = pos;i < size;i++){
-                    arr[i] = arr[i + 1]; //geser kekanan
+                for(size_t i = size;i > pos;i--){
+                    arr[i - 1] = arr[i] ; //geser kekanan
                 }
                 create_element(pos,val);
+            }
+        }
+        void insert(std::size_t pos,std::size_t n,const T& val){
+            if(size + n >= capacity){
+                grow();
+            }
+            for(size_t i = size;i > pos;i--){
+                arr[i - 1] = arr[i + n - 1];
+            }
+            for(size_t i = pos;i < n;i++){
+                create_element(i,val);
             }
         }
     private:
@@ -218,7 +254,9 @@ class Vector{
             resize(n,T{});
         }
         void reserve(std::size_t n){
-            element_traits::allocate(alloc,n);
+            //alokasi capacity baru
+            capacity = n;
+            element_traits::allocate(alloc,capacity);
         }
         void resize(std::size_t n,const T& val){
             if(n == size){
@@ -229,10 +267,15 @@ class Vector{
                 }
                 size = n;
                 return;
-            }
+            }else if(n > size && n < capacity){
+                for(size_t i = size ;i < n;i++){
+                    create_element(val);
+                }
+                size = n;
+            }   
             if(n > capacity){
                 reserve(recomended_cap(n));
-                for(int i = 0;i < capacity;i++){
+                for(int i = size;i < n;i++){
                     create_element(1,val);
                 }
                 size = n;
@@ -265,4 +308,13 @@ class Vector{
             }
         }
 };
+template <typename U>
+std::ostream& operator<<(std::ostream& os,const Vector<U>& others){
+    os << "[ ";
+    for(std::size_t i = 0;i < others.size;i++){
+        os << others.arr[i];
+    }
+    os << "]";
+    return os;
+}
 #endif
