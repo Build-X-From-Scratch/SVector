@@ -1,3 +1,26 @@
+/*
+MIT License
+
+Copyright (c) 2025 Build X  From  Scratch
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 #ifndef __VECTOR
 #define __VECTOR
 #include <cstddef>
@@ -143,6 +166,12 @@ class Vector{
         int get_capacity(){
             return this->capacity;
         }
+        bool is_empty(){
+            if(size == 0){
+                return true;
+            }
+            return false;
+        }
         bool ensure_capacity(){
             if(size + 1 <= capacity){
                 return true;
@@ -169,13 +198,18 @@ class Vector{
         }
     public:
         void push_front(const T& value){
+            if(is_empty()){
+                create_element(0,value);
+                size++;
+                return;
+            }
             if(ensure_capacity()){
                 create_element(size, value);
                 for(int i = size;i > 0;i--){
                     arr[i] = arr[i - 1];
                 }
-                size++;
-                arr[0] = value;
+                // size++;
+                //arr[0] = value;
             }else{
                 grow();
                 create_element(size, value);
@@ -214,6 +248,9 @@ class Vector{
         }
     public:
         void insert(std::size_t pos,const T& val){
+            if(is_empty()){
+                push_back(val);
+            }
             if(size + 1 >= capacity){
                 grow();
             }
@@ -223,6 +260,7 @@ class Vector{
                 }
                 create_element(0,val);
             }else{
+                // create_element(size,T{});
                 for(size_t i = size;i > pos;i--){
                     arr[i - 1] = arr[i] ; //geser kekanan
                 }
@@ -242,7 +280,7 @@ class Vector{
         }
     private:
         void grow(){
-            T* temp = element_traits::allocate(capacity * 2);
+            T* temp = new T[capacity * 2];
             capacity *= 2;
             for(int i = 0;i < capacity;i++){
                 create_element(i, arr[i]);
@@ -304,8 +342,9 @@ class Vector{
     public:
         void print()const noexcept{
             for(int i = 0;i < size;i++){
-                std::cout << arr[i] << std::endl;
+                std::cout << arr[i] << " ";
             }
+            std::cout << std::endl;
         }
 };
 template <typename U>
