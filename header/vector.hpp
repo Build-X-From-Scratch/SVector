@@ -204,24 +204,14 @@ class Vector{
                 return;
             }
             if(ensure_capacity()){
-                create_element(size, value);
-                for(int i = size;i > 0;i--){
-                    arr[i] = arr[i - 1];
-                }
-                // size++;
-                //arr[0] = value;
-            }else{
                 grow();
-                create_element(size, value);
-                for(int i = size;i > 0;i--){
-                    arr[i] = arr[i - 1];
-                }
-                size++;
-                arr[0] = value;
+            }
+            for(int i = size;i > 0;i--){
+                arr[i] = arr[i - 1];
             }
             create_element(0, value);
             size++;
-        }
+        }   
         void push_back(const T& value){
             if(size == capacity){
                 grow();
@@ -248,24 +238,29 @@ class Vector{
         }
     public:
         void insert(std::size_t pos,const T& val){
-            if(is_empty()){
-                push_back(val);
-            }
-            if(size + 1 >= capacity){
-                grow();
-            }
-            if(pos == 0){
-                for(int i = 1;i < size;i++){
-                    arr[i] = arr[i + 1];
+            if (is_empty()) {
+                    push_back(val);
+                    return;
                 }
-                create_element(0,val);
-            }else{
-                // create_element(size,T{});
-                for(size_t i = size;i > pos;i--){
-                    arr[i - 1] = arr[i] ; //geser kekanan
+
+                if (size + 1 > capacity) {
+                    std::size_t offset = pos;
+                    grow();
+                    pos = offset; // karena grow() bisa realokasi dan ubah arr
                 }
-                create_element(pos,val);
-            }
+
+                // Geser elemen ke kanan, gunakan placement new di slot mentah
+                new (&arr[size]) T(std::move(arr[size - 1])); // buat elemen baru di slot akhir
+
+                for (std::size_t i = size - 1; i > pos; --i) {
+                    arr[i] = std::move(arr[i - 1]); // pindahkan elemen
+                }
+
+                // Buat elemen baru di posisi yang kosong
+                arr[pos] = val;
+
+                ++size;
+
         }
         void insert(std::size_t pos,std::size_t n,const T& val){
             if(size + n >= capacity){
