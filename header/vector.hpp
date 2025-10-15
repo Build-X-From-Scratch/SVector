@@ -266,22 +266,32 @@ class Vector{
             if(size + n >= capacity){
                 grow();
             }
-            for(size_t i = size;i > pos;i--){
-                arr[i - 1] = arr[i + n - 1];
+            for(int i = size - 1;i >= pos;--i){
+                arr[i + n] = arr[i];
             }
-            for(size_t i = pos;i < n;i++){
-                create_element(i,val);
+            for(size_t i = 0;i < std::size_t(n);i++){
+                arr[pos + i] = val;
             }
+            size += n;
         }
     private:
         void grow(){
-            T* temp = new T[capacity * 2];
-            capacity *= 2;
-            for(int i = 0;i < capacity;i++){
-                create_element(i, arr[i]);
+            // update cap
+            std::size_t new_capacity = capacity *  2;
+            std::size_t old_cap = capacity;
+            //allocate temp
+            T* temp = element_traits::allocate(alloc,new_capacity);
+            for(std::size_t i = 0;i < size;i++){
+                element_traits::construct(alloc,std::addressof(temp[i]),std::move(arr[i]));
             }
-            free_storage();
+            for(size_t i = 0;i < size;i++){
+                element_traits::destroy(alloc,std::addressof(arr[i]));
+            }
+            element_traits::deallocate(alloc,arr,old_cap);
             arr = temp;
+            //update cap
+            capacity = new_capacity;
+            //
         }
         void resize(std::size_t n){
             resize(n,T{});
