@@ -25,11 +25,13 @@ SOFTWARE.
 #define __VECTOR
 #include <cstddef>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <iostream>
 #include <initializer_list>
 #include <ostream>
 #include <stdexcept>
+#include <sys/types.h>
 template <typename T,typename Allocator = std::allocator<T>>
 class Vector{
     private:
@@ -92,13 +94,13 @@ class Vector{
             private:
                 T* ptr;
             public: 
-                //iterator traits
+            //iterator traits
+                friend class Vector;
                 using iterator_category = std::random_access_iterator_tag;
                 using value_type        = T;
                 using difference_type   = std::ptrdiff_t;
                 using pointer           = T*;
                 using reference         = T&;
-                friend class Vector;
             public: 
                 Iterator(T* p = nullptr):ptr(p){}
 
@@ -120,6 +122,9 @@ class Vector{
                 }
                 bool operator!=(const Iterator& others){
                     return ptr != others.ptr;
+                }
+                Iterator operator+(difference_type i)const{
+                    return Iterator(ptr + i);
                 }
         };
     public: 
@@ -153,12 +158,14 @@ class Vector{
             }
             return arr[pos];
         }
-         const T& operator[](std::size_t pos)const{
+        const T& operator[](std::size_t pos)const{
             if(pos > size){
                 throw std::out_of_range("Index out of range");
             }
             return arr[pos]; 
         }
+    public:
+        using const_iterator    = const Iterator;
     public: //getter
         int get_size(){
             return this->size;
@@ -196,6 +203,9 @@ class Vector{
             }
             return arr[pos];
         }
+        std::size_t max_size()const noexcept{
+            return std::numeric_limits<T>::main() / sizeof(T);
+        }
     public:
         void push_front(const T& value){
             if(is_empty()){
@@ -227,7 +237,7 @@ class Vector{
             size--;
         }
         void pop_front(){
-            if(size == 0){
+            if(size == 0){  
                 //throw
             }
             for(int i = 1;i < size;i++){
@@ -237,7 +247,32 @@ class Vector{
             size--;
         }
     public:
-        void insert(std::size_t pos,const T& val){
+        void insert(const_iterator pos,const T& val){
+            if (is_empty()) {
+                    push_back(val);
+                    return;
+                }
+
+                if (size + 1 > capacity) {
+                    std::size_t offset = pos;
+                    grow();
+                    pos = offset; // karena grow() bisa realokasi dan ubah arr
+                }
+    
+                // Geser elemen ke kanan, gunakan placement new di slot mentah
+                new (&arr[size]) T(std::move(arr[size - 1])); // buat elemen baru di slot akhir
+
+                for (std::size_t i = size - 1; i > pos; --i) {
+                    arr[i] = std::move(arr[i - 1]); // pindahkan elemen
+                }
+
+                // Buat elemen baru di posisi yang kosong
+                arr[pos] = val;
+
+                ++size;
+
+        }
+        Iterator insert(const_iterator pos,const T&& val){
             if (is_empty()) {
                     push_back(val);
                     return;
@@ -262,7 +297,7 @@ class Vector{
                 ++size;
 
         }
-        void insert(std::size_t pos,std::size_t n,const T& val){
+        void insert(const_iterator pos,std::size_t n,const T& val){
             if(size + n >= capacity){
                 grow();
             }
@@ -274,10 +309,46 @@ class Vector{
             }
             size += n;
         }
+        void insert(const_iterator pos,std::size_t n,const T&& val){
+            if(size + n >= capacity){
+                grow();
+            }
+            for(int i = size - 1;i >= pos;--i){
+                arr[i + n] = arr[i];
+            }
+            for(size_t i = 0;i < std::size_t(n);i++){
+                arr[pos + i] = val;
+            }
+            size += n;
+        }
+        void insert(std::size_t pos,std::initializer_list<T>ilist){
+            if(size + ilist.size() >= capacity){
+                grow();
+            }
+            if(is_empty()){
+                for(size_t i = 0;i < ilist.size();i++){
+                    element_traits::construct(alloc,std::addressof(arr[i]),ilist[i]);
+                }
+            }else{
+                std::size_t n = ilist.size();
+                for(ssize_t i = size  - 1;i > ssize_t(pos);i++){
+                    arr[i + n] = arr[i]; 
+                }
+                for(size_t i = 0;i < n;i++){
+                    element_traits::construct(alloc,std::addressof(arr[pos + i]),ilist[i]);
+                }
+            }
+        }   
     private:
         void grow(){
-            // update cap
+            grow(capacity * 2);
+            //
+        }
+        void grow(std::size_t min_cap){
             std::size_t new_capacity = capacity *  2;
+            if(new_capacity < min_cap){
+                new_capacity = min_cap;
+            }
             std::size_t old_cap = capacity;
             //allocate temp
             T* temp = element_traits::allocate(alloc,new_capacity);
@@ -291,7 +362,6 @@ class Vector{
             arr = temp;
             //update cap
             capacity = new_capacity;
-            //
         }
         void resize(std::size_t n){
             resize(n,T{});
