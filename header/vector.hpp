@@ -30,8 +30,15 @@ SOFTWARE.
 #include <iostream>
 #include <initializer_list>
 #include <ostream>
+#include <concepts>
 #include <stdexcept>
 #include <sys/types.h>
+template <typename It>
+concept my_input_iterator = requires(It it) {
+    *it;    // Bisa di-dereference
+    ++it;   // Bisa pre-increment
+    it++;   // Bisa post-increment
+};
 template <typename T,typename Allocator = std::allocator<T>>
 class Vector{
     private:
@@ -339,6 +346,9 @@ class Vector{
                 }
             }
         }   
+        // template <std::input_iterator It>
+        // requires (my_input_iterator It)
+        // void insert(It first,It last){}
     private:
         void grow(){
             grow(capacity * 2);
