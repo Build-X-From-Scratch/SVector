@@ -8,3 +8,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #   
 
 enable_testing()
+
+add_executable(MyProject implementation/implementation.cpp)
+target_include_directories(implementation PRIVATE include)
