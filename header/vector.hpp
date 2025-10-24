@@ -133,6 +133,9 @@ class Vector{
                 Iterator operator+(difference_type i)const{
                     return Iterator(ptr + i);
                 }
+                difference_type operator-(const Iterator& others)const{
+                    return ptr - others.ptr;
+                }
         };
     public: 
         Iterator begin()const{
@@ -171,7 +174,7 @@ class Vector{
             }
             return arr[pos]; 
         }
-    public:
+    private:
         using const_iterator    = const Iterator;
     public: //getter
         int get_size(){
@@ -254,101 +257,137 @@ class Vector{
             size--;
         }
     public:
-        void insert(const_iterator pos,const T& val){
+        Iterator insert(const_iterator pos,const T& val){
             if (is_empty()) {
                     push_back(val);
                     return;
                 }
-
+                int index = pos - begin();
                 if (size + 1 > capacity) {
-                    std::size_t offset = pos;
+                    std::size_t offset = index;
                     grow();
-                    pos = offset; // karena grow() bisa realokasi dan ubah arr
+                    index = offset; // karena grow() bisa realokasi dan ubah arr
                 }
-    
-                // Geser elemen ke kanan, gunakan placement new di slot mentah
-                new (&arr[size]) T(std::move(arr[size - 1])); // buat elemen baru di slot akhir
-
-                for (std::size_t i = size - 1; i > pos; --i) {
+                for (std::size_t i = size; i > index; --i) {
                     arr[i] = std::move(arr[i - 1]); // pindahkan elemen
                 }
-
                 // Buat elemen baru di posisi yang kosong
-                arr[pos] = val;
-
+                element_traits::construct(alloc,arr + index,val);
                 ++size;
-
+                return Iterator(arr + index);
         }
         Iterator insert(const_iterator pos,const T&& val){
             if (is_empty()) {
                     push_back(val);
                     return;
                 }
-
+                int index = pos - begin();
                 if (size + 1 > capacity) {
-                    std::size_t offset = pos;
+                    std::size_t offset = index;
                     grow();
-                    pos = offset; // karena grow() bisa realokasi dan ubah arr
+                    index = offset; // karena grow() bisa realokasi dan ubah arr
                 }
-
-                // Geser elemen ke kanan, gunakan placement new di slot mentah
-                new (&arr[size]) T(std::move(arr[size - 1])); // buat elemen baru di slot akhir
-
-                for (std::size_t i = size - 1; i > pos; --i) {
+                for (std::size_t i = size; i > index; --i) {
                     arr[i] = std::move(arr[i - 1]); // pindahkan elemen
                 }
-
                 // Buat elemen baru di posisi yang kosong
-                arr[pos] = val;
-
+                element_traits::construct(alloc,arr + index,val);
                 ++size;
-
+                return Iterator(arr + index);
         }
-        void insert(const_iterator pos,std::size_t n,const T& val){
+        Iterator insert(const_iterator pos,std::size_t n,const T& val){
             if(size + n >= capacity){
                 grow();
             }
-            for(int i = size - 1;i >= pos;--i){
+            ssize_t index = pos - begin();
+            // geser
+            for(ssize_t i = size - 1;i >= index;--i){
                 arr[i + n] = arr[i];
             }
-            for(size_t i = 0;i < std::size_t(n);i++){
-                arr[pos + i] = val;
+            // insert element
+            for(ssize_t i = 0;i < ssize_t(n);i++){
+                element_traits::construct(alloc,arr + (pos + i),val);
             }
             size += n;
+            return Iterator(arr + index);
         }
-        void insert(const_iterator pos,std::size_t n,const T&& val){
+        Iterator insert(const_iterator pos,std::size_t n,const T&& val){
             if(size + n >= capacity){
                 grow();
             }
-            for(int i = size - 1;i >= pos;--i){
+            ssize_t end = pos - begin();
+            for(ssize_t i = size - 1;i >= end;--i){
                 arr[i + n] = arr[i];
             }
-            for(size_t i = 0;i < std::size_t(n);i++){
-                arr[pos + i] = val;
+            for(ssize_t i = 0;i < std::size_t(n);i++){
+                element_traits::construct(alloc,arr + (pos + i),val);
             }
             size += n;
+            return Iterator(arr + end);
         }
-        void insert(std::size_t pos,std::initializer_list<T>ilist){
+        Iterator insert(std::size_t pos,std::initializer_list<T>ilist){
             if(size + ilist.size() >= capacity){
                 grow();
             }
+            ssize_t end = pos - begin();
             if(is_empty()){
                 for(size_t i = 0;i < ilist.size();i++){
                     element_traits::construct(alloc,std::addressof(arr[i]),ilist[i]);
                 }
             }else{
                 std::size_t n = ilist.size();
-                for(ssize_t i = size  - 1;i > ssize_t(pos);i++){
+                for(ssize_t i = size  - 1;i > end;i++){
                     arr[i + n] = arr[i]; 
                 }
                 for(size_t i = 0;i < n;i++){
                     element_traits::construct(alloc,std::addressof(arr[pos + i]),ilist[i]);
                 }
             }
-        }   
-        // template <std::input_iterator It>
-        // requires (my_input_iterator It)
-        // void insert(It first,It last){}
+            return Iterator(arr + end);
+        }  
+        template <typename It>
+        requires my_input_iterator<It>
+        Iterator insert(const std::size_t pos,It first,It last){
+            if(first == last){
+                return (arr + pos);
+            }
+            auto n = std::distance(first,last);
+            if(size + n >= capacity){
+                grow();
+            }
+            //pindahkan objek
+            for(ssize_t i = size - 1;i > 0;i--){
+                arr[i + n] = arr[i];
+            }
+            int index = pos - begin();
+            for(decltype(n) i = 0;i < n;i++,++first){
+                create_element(i + index,*first);
+            }
+            size += n;
+            return Iterator(arr + index);
+        } 
+    public:
+        /**
+        * @brief erase adalah method untuk menghapus element tertentu berdasarkan iterator pos
+        * didalam array dinamis.Ide utama untuk melakukan ini adalah geser ke kanan element
+        * yang akan dihapus,lalu destroy dan deallocate
+        *
+        */
+        Iterator erase(Iterator pos){
+            // if(is_empty()){
+            //     return Iterator(arr + pos);
+            // }
+            // destory and deallocate element
+            ssize_t index = pos - begin();
+            for(ssize_t i = index;i < size;i++){
+                arr[i] = arr[i + 1];
+            }
+            // destroy
+            destroy(size - 1);
+            size--;
+            return Iterator(arr + index);
+
+        }
     private:
         void grow(){
             grow(capacity * 2);
@@ -404,6 +443,26 @@ class Vector{
                 size = n;
             }
 
+        }
+    public:
+        /**
+        * @brief shrink adalah method pada vector yang digunakan untuk memangkas memory aloccation
+        * yang sia-sia biasanya dipakai saat jumlah element saaat ini setengah dari cap,ketika shrink
+        * dijalankan maka capacity akan sama dengan size.
+        */
+        void shrink(){
+            std::size_t new_capacity = capacity / 2;
+            std::size_t old_cap = capacity;
+            T temp = element_traits::allocate(alloc,new_capacity);
+            for(int i = 0;i < capacity;i++){
+                element_traits::construct(alloc,std::addressof(temp[i]),std::move(arr[i]));
+            }
+            for(size_t i = 0;i < size;i++){
+                element_traits::destory(alloc,std::addressof(arr[i]));
+            }
+            element_traits::deallocate(alloc,arr,old_cap);
+            arr = temp;
+            capacity = new_capacity;
         }
     public: 
         void clear(){
