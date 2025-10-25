@@ -1,6 +1,6 @@
 compile(){
     make
-    cd bin
-    ./program
+    cd binary_excetuble
+    ./imp.o
 }
 compile

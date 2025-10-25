@@ -6,11 +6,23 @@
 *.lo
 *.o
 *.obj
-
+# .vscode
+.vscode
+# cache
+.cache
+# main
+main
+# program
+program
 # Precompiled Headers
 *.gch
 *.pch
-
+# bin
+# bin
+# Cmake
+CMakeFiles
+# build
+build
 # Linker files
 *.ilk
 
