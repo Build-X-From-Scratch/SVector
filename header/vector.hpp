@@ -214,16 +214,26 @@ class Vector{
             return arr[pos];
         }
         std::size_t max_size()const noexcept{
-            return std::numeric_limits<T>::main() / sizeof(T);
+            return std::numeric_limits<T>::max() / sizeof(T);
+        }
+    private:
+        bool is_full()const noexcept{
+            if(size == max_size()){
+                return true;
+            }
+            return false;
         }
     public:
         void push_front(const T& value){
+            if(is_full()){
+                throw std::overflow_error("max capacity container reached");
+            }
             if(is_empty()){
                 create_element(0,value);
                 size++;
                 return;
             }
-            if(ensure_capacity()){
+            if(size == capacity){
                 grow();
             }
             for(int i = size;i > 0;i--){
@@ -231,8 +241,39 @@ class Vector{
             }
             create_element(0, value);
             size++;
-        }   
+        }
+        void push_front(const T&& value){
+            if(is_full()){
+                throw std::overflow_error("max capacity container reached");
+            }
+            if(is_empty()){
+                create_element(0,value);
+                size++;
+                return;
+            }
+            if(size == capacity){
+                grow();
+            }
+            for(int i = size;i > 0;i--){
+                arr[i] = arr[i - 1];
+            }
+            create_element(0, value);
+            size++;
+        }     
         void push_back(const T& value){
+            if(is_full()){
+                throw std::overflow_error("max capacity container reached");
+            }
+            if(size == capacity){
+                grow();
+            }
+            create_element(size, value);
+            size++;
+        }
+        void push_back(const T&& value){
+            if(is_full()){
+                throw std::overflow_error("max capacity container reached");
+            }
             if(size == capacity){
                 grow();
             }
@@ -371,22 +412,63 @@ class Vector{
         * @brief erase adalah method untuk menghapus element tertentu berdasarkan iterator pos
         * didalam array dinamis.Ide utama untuk melakukan ini adalah geser ke kanan element
         * yang akan dihapus,lalu destroy dan deallocate
+        * @details pada erase mengembalikan dimana posisi iterator dihapus
+        * misal return Iterator(arr + pos) jika bukan diakhir element,jika diakhir maka
+        * retutn end();
         *
         */
         Iterator erase(Iterator pos){
-            // if(is_empty()){
-            //     return Iterator(arr + pos);
-            // }
+            if(is_empty()){
+                throw std::underflow_error("container is empty");
+            }
+            if(pos == end()){
+                return end();
+            }
             // destory and deallocate element
             ssize_t index = pos - begin();
-            for(ssize_t i = index;i < size;i++){
+            for(ssize_t i = index;i < size - 1;i++){
                 arr[i] = arr[i + 1];
             }
+            // simulasi erase pos 1
+            // 1 2 3 4 5
+            // 1 3 4 5
             // destroy
             destroy(size - 1);
             size--;
+            if(index <= size){
+                return end();
+            }
             return Iterator(arr + index);
-
+        }
+        Iterator erase(Iterator first,Iterator last){
+            if(first == last){ //end
+                return first;
+            }
+            if(is_empty()){
+                throw std::underflow_error("container is empty");
+            }
+            // case last_index === end()
+            auto n = std::distance(first,last);
+            ssize_t first_index = first - begin();
+            ssize_t last_index = last - begin();
+            if(n == size){
+                // destroy
+                for(ssize_t i = 0;i < size;i++){
+                    element_traits::destroy(alloc,std::addressof(arr[i]));
+                }
+                size = 0;
+                return end();
+            }
+            // geser
+            for(ssize_t i = last_index;i < size;i++){
+                arr[i - n] = arr[i];
+            }
+            // destroy
+            for(ssize_t i = size - n;i < size;i++){
+                element_traits::destroy(alloc,std::addressof(arr[i]));
+            }
+            size -= n;
+            return Iterator(arr + first_index);
         }
     private:
         void grow(){
@@ -458,7 +540,7 @@ class Vector{
                 element_traits::construct(alloc,std::addressof(temp[i]),std::move(arr[i]));
             }
             for(size_t i = 0;i < size;i++){
-                element_traits::destory(alloc,std::addressof(arr[i]));
+                element_traits::destroy(alloc,std::addressof(arr[i]));
             }
             element_traits::deallocate(alloc,arr,old_cap);
             arr = temp;
