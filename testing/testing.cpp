@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <stdexcept>
 #include "../header/vector.hpp"
 
 TEST(push_testing,Push_back_basicTest){
@@ -54,6 +55,65 @@ TEST(push_testing,push_front_LoopTesting){
         expectation.push_back(i);
     }
     expectation = std::vector<int>(expectation.rbegin(),expectation.rend());
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
+TEST(pop_testing,pop_back_BasicTest){
+    Vector<int>v = {1,2,3,4};
+    EXPECT_EQ(v.back(),4);
+    v.pop_back();
+    EXPECT_EQ(v.back(),3);
+    std::vector<int>expectation = {1,2,3};
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
+TEST(pop_testing,pop_bac_Empty){
+    Vector<int>v;
+    EXPECT_TRUE(v.is_empty());
+    EXPECT_THROW(v.pop_back(), std::runtime_error);
+}
+TEST(pop_testing,pop_back_LoopUntilEmpty){
+    Vector<int>v;
+    EXPECT_TRUE(v.is_empty());
+    for(int i = 1;i <= 100;i++){
+        v.push_back(i);
+    }
+    EXPECT_FALSE(v.is_empty());
+    while(!v.is_empty()){
+        v.pop_back();
+    }
+    EXPECT_TRUE(v.is_empty());
+    std::vector<int>expectation = {};
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
+TEST(Insert_Testing,Insert_single_Element){
+    Vector<int>v = {1,2,3};
+    EXPECT_EQ(v.get_size(),3);
+    v.insert(v.begin() + 1,100);
+    EXPECT_EQ(v.get_size(),4);
+    std::vector<int>expectation = {1,100,2,3};
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
+TEST(Insert_Testing,Insert_single_Element_EmptyContainer){
+    Vector<int>v;
+    EXPECT_TRUE(v.is_empty());
+    v.insert(v.begin() + 0,100);
+    EXPECT_FALSE(v.is_empty());
+    std::vector<int>expectation = {100};
     std::vector<int>actual;
     for(auto x: v){
         actual.push_back(x);
