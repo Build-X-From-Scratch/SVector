@@ -80,19 +80,41 @@ class Vector{
                 i++;
             }
         }
-        // // ranges constructor use Vector<int>(v->this container);
-        // template <std::ranges::input_range  R>
-        // Vector(R&& r){
-        //     // implementation ranges constructor
-        // }
+        // ranges constructor use Vector<int>(v->this container);
+        template <std::ranges::input_range R>
+        Vector(R&& r){
+            //declare and initialization cap 2 * ranges size
+            capacity = r.size() * 2;
+            // use size on ranges
+            size = r.size();
+            element_traits::allocate(alloc,capacity);
+            // construct element
+            int i = 0;
+            for(auto it = r.begin();it != r.end();it++,i++){
+                element_traits::construct(alloc,std::addressof(arr[i]),*it);
+            }
+        }
         // // ranges
-        // template<typename It>
-        // requires my_input_iterator<It>
-        // Vector(It first,It last){
-        //     //implement in here
-        // }
-        //copy constructor
+        template<typename It>
+        requires my_input_iterator<It>
+        Vector(It first,It last){
+            if(first == last){
+                return;
+            }
+            auto n = std::distance(first,last);
+            capacity = n * 2;
+            size = n;
+            arr = element_traits(alloc,capacity);
+            int i = 0;
+            for(auto it = first;it != last;++it,i++){
+                element_traits::construct(alloc,std::addressof(arr[i]),*it);
+            }
+        }
+        //copy coppy assignment
         Vector operator==(const Vector& others){
+            if(this == &others){
+                return *this;
+            }
             size = others.size;
             capacity = others.capacity;
             arr = element_traits::allocate(alloc,capacity);
@@ -100,6 +122,14 @@ class Vector{
             for(const T& x: others.arr){
                 element_traits::construct(alloc,std::addressof(arr[i]),x);
                 i++;
+            }
+        }
+        Vector(const Vector& others){
+            size = others.size;
+            capacity = others.capacity;
+            arr = element_traits::allocate(alloc,capacity);
+            for(int i = 0;i < others.size;i++){
+                element_traits::construct(alloc,std::addressof(arr[i]),others.arr[i]);
             }
         }
         ~Vector(){
