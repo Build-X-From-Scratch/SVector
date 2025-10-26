@@ -31,6 +31,7 @@ SOFTWARE.
 #include <initializer_list>
 #include <ostream>
 #include <concepts>
+#include <ranges>
 #include <stdexcept>
 #include <sys/types.h>
 template <typename It>
@@ -79,11 +80,19 @@ class Vector{
                 i++;
             }
         }
+        // // ranges constructor use Vector<int>(v->this container);
+        // template <std::ranges::input_range  R>
+        // Vector(R&& r){
+        //     // implementation ranges constructor
+        // }
+        // // ranges
+        // template<typename It>
+        // requires my_input_iterator<It>
+        // Vector(It first,It last){
+        //     //implement in here
+        // }
         //copy constructor
         Vector operator==(const Vector& others){
-            if(this == &others){//self copy
-                return;
-            }
             size = others.size;
             capacity = others.capacity;
             arr = element_traits::allocate(alloc,capacity);
@@ -299,30 +308,30 @@ class Vector{
         }
     public:
         Iterator insert(const_iterator pos,const T& val){
-            if (is_empty()) {
-                    push_back(val);
-                    return;
-                }
-                int index = pos - begin();
-                if (size + 1 > capacity) {
-                    std::size_t offset = index;
-                    grow();
-                    index = offset; // karena grow() bisa realokasi dan ubah arr
-                }
-                for (std::size_t i = size; i > index; --i) {
-                    arr[i] = std::move(arr[i - 1]); // pindahkan elemen
-                }
-                // Buat elemen baru di posisi yang kosong
-                element_traits::construct(alloc,arr + index,val);
-                ++size;
+            int index = pos - begin();
+            if(is_empty()) {
+                push_back(val);
                 return Iterator(arr + index);
+            }
+            if (size + 1 > capacity) {
+                std::size_t offset = index;
+                grow();
+                index = offset; // karena grow() bisa realokasi dan ubah arr
+            }
+            for (std::size_t i = size; i > index; --i) {
+                arr[i] = std::move(arr[i - 1]); // pindahkan elemen
+            }
+            // Buat elemen baru di posisi yang kosong
+            element_traits::construct(alloc,arr + index,val);
+            ++size;
+            return Iterator(arr + index);
         }
         Iterator insert(const_iterator pos,const T&& val){
-            if (is_empty()) {
+            int index = pos - begin();
+            if(is_empty()) {
                     push_back(val);
-                    return;
+                    return Iterator(arr + index);
                 }
-                int index = pos - begin();
                 if (size + 1 > capacity) {
                     std::size_t offset = index;
                     grow();
@@ -469,6 +478,37 @@ class Vector{
             }
             size -= n;
             return Iterator(arr + first_index);
+        }
+    public:
+        void swap(Vector& others){
+            // swap cap
+            std::size_t temp_cap = capacity;
+            capacity = others.capacity;
+            others.capacity = temp_cap;
+            // swap size
+            std::size_t temp_size = size;
+            size = others.size;
+            others.size = temp_size;
+            // swap container
+            // allocate temp   
+            T* temp_container = arr;
+            arr = others.arr;
+            others.arr = temp_container;
+        }
+        void swap(Vector&& others){
+            // swap cap
+            std::size_t temp_cap = capacity;
+            capacity = others.capacity;
+            others.capacity = temp_cap;
+            // swap size
+            std::size_t temp_size = size;
+            size = others.size;
+            others.size = temp_size;
+            // swap container
+            // allocate temp   
+            T* temp_container = arr;
+            arr = others.arr;
+            others.arr = temp_container;
         }
     private:
         void grow(){
