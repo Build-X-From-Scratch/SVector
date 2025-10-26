@@ -120,3 +120,18 @@ TEST(Insert_Testing,Insert_single_Element_EmptyContainer){
     }
     EXPECT_EQ(actual,expectation);
 }
+TEST(constructorTesting,rangeConstructor){
+    Vector<int>a = {100,200,300};
+    Vector<int>b(a);
+    EXPECT_EQ(a,b);
+}
+TEST(constructorTesting,firstConstructor){
+    std::vector<int>a = {100,200,300};
+    Vector<int>b(a.begin(),a.end());
+    std::vector<int>expectation = a;
+    std::vector<int>actual;
+    for(auto x: b){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
