@@ -540,6 +540,69 @@ class Vector{
             arr = others.arr;
             others.arr = temp_container;
         }
+    public:
+        /***
+        * @brief assign adalah method pada vector yang digunakan untuk mereplace container dengan n value
+        * dimana n,adalah jumlah element.assign memiliki 3 overload function
+        * 1.void assign(std::size_t count,const T& value)
+        * 2.template <class InputIt>
+        * void asssign(InputIt first,InputIt last)
+        * 3.void assign(std::initializer list)
+        */
+        void assign(std::size_t count,const T& value){
+            if(count >= capacity){
+                grow();
+            }
+            for(int i = 0;i < count;i++){
+                arr[i] = value;
+            }
+            if(count < size){
+                for(ssize_t i = count;i < size;i++){
+                    element_traits::destroy(alloc,arr + i);
+                }
+            }
+            size = count;
+        }
+        template <typename It>
+        requires my_input_iterator<It>
+        void assign(It first,It last){
+            if(first == last){
+                size = 0;
+                return;
+            }
+            auto n = std::distance(first,last);
+            if(n >= capacity){
+                grow();
+            }
+            std::copy(first,last,begin(),arr);
+            if(n < size){
+                // iteratif
+                for(ssize_t i = n;i < size;i++){
+                    element_traits::destroy(alloc,std::addressof(arr[i]));
+                }
+                // idiomatik
+                // std::destroy(arr + n, arr + size);
+            }
+            size = n;
+        }
+        void assign(std::initializer_list<T>arr){
+            if(arr.begin() == arr.end()){
+                size = 0;
+                return;
+            }
+            auto n = std::distance(arr.begin(),arr.end());
+            if(n < capacity){
+                grow();
+            }
+            std::copy(arr.begin(),arr.end(),arr);
+            if(n < size){
+                for(ssize_t i = n;i < size;i++){
+                    element_traits::destroy(alloc,std::addressof(arr[i]));
+                }
+                //pos1,pos2
+            }
+            size = n;
+        }
     private:
         void grow(){
             grow(capacity * 2);
