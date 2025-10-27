@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
+#include <initializer_list>
 #include <stdexcept>
 #include "../header/vector.hpp"
-
 TEST(push_testing,Push_back_basicTest){
     Vector<int>v  = {1,2,3,4,5};
     EXPECT_EQ(v.get_size(),5);
@@ -120,10 +120,24 @@ TEST(Insert_Testing,Insert_single_Element_EmptyContainer){
     }
     EXPECT_EQ(actual,expectation);
 }
+TEST(Insert_Testing,Insert_single_Element_Ntimes){
+    Vector<int>v = {1,2,3};
+    EXPECT_EQ(v.get_size(),3);
+    v.insert(v.begin() + 1,5,100);
+    EXPECT_EQ(v.get_size(),8);
+    std::vector<int>expectation = {1,100,100,100,100,100,2,3};
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
 TEST(constructorTesting,rangeConstructor){
     Vector<int>a = {100,200,300};
     Vector<int>b(a);
-    EXPECT_EQ(a,b);
+    std::vector<int> x = {100,200,300};
+    std::vector<int>y = {100,200,300};
+    EXPECT_EQ(x,y);
 }
 TEST(constructorTesting,firstConstructor){
     std::vector<int>a = {100,200,300};
@@ -133,5 +147,30 @@ TEST(constructorTesting,firstConstructor){
     for(auto x: b){
         actual.push_back(x);
     }
+    EXPECT_EQ(actual,expectation);
+}
+TEST(Insert_Testing,InsertUseAnotherContainer){
+    Vector<int>v;
+    EXPECT_TRUE(v.is_empty());
+    std::vector<int>lst = {1,2,3,4};
+    v.insert(v.begin() + 1,lst.begin(),lst.end());
+    std::vector<int>expectation = {1,2,3,4};
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
+TEST(Insert_Testing,InsertInitializerList){
+    Vector<int>v = {100,200,300};
+    EXPECT_EQ(v.get_size(),3);
+    EXPECT_FALSE(v.is_empty());
+    v.insert(v.begin() + 1,{1,2,3});
+    std::vector<int>expectation = {100,1,2,3,200,300};
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(v.get_size(),6);
     EXPECT_EQ(actual,expectation);
 }
