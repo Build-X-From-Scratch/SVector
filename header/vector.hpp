@@ -104,7 +104,7 @@ class Vector{
             auto n = std::distance(first,last);
             capacity = n * 2;
             size = n;
-            arr = element_traits(alloc,capacity);
+            arr = element_traits::allocate(alloc,capacity);
             int i = 0;
             for(auto it = first;it != last;++it,i++){
                 element_traits::construct(alloc,std::addressof(arr[i]),*it);
@@ -337,6 +337,10 @@ class Vector{
             size--;
         }
     public:
+        /**
+        * @brief insert,adalah salah satu method dalam dynamic array,yang digunakan untuk insert
+        * value ke container dengan beberapa kriteria berdasarkan parameter
+        */
         Iterator insert(const_iterator pos,const T& val){
             int index = pos - begin();
             if(is_empty()) {
@@ -376,6 +380,13 @@ class Vector{
                 return Iterator(arr + index);
         }
         Iterator insert(const_iterator pos,std::size_t n,const T& val){
+            if(is_empty()){
+                for(std::size_t i = 0;i < n;i++){
+                    element_traits::construct(alloc,std::addressof(arr[i]),val);
+                    size++;
+                }
+                return begin();
+            }
             if(size + n >= capacity){
                 grow();
             }
@@ -386,50 +397,72 @@ class Vector{
             }
             // insert element
             for(ssize_t i = 0;i < ssize_t(n);i++){
-                element_traits::construct(alloc,arr + (pos + i),val);
+                element_traits::construct(alloc,std::addressof(arr[pos + i]),val);
             }
             size += n;
             return Iterator(arr + index);
         }
         Iterator insert(const_iterator pos,std::size_t n,const T&& val){
+            if(is_empty()){
+                for(std::size_t i = 0;i < n;i++){
+                    element_traits::construct(alloc,arr + i,val);
+                    size++;
+                }
+                return begin();
+            }
+            ssize_t end = pos - begin();
             if(size + n >= capacity){
                 grow();
             }
-            ssize_t end = pos - begin();
             for(ssize_t i = size - 1;i >= end;--i){
                 arr[i + n] = arr[i];
             }
             for(ssize_t i = 0;i < std::size_t(n);i++){
-                element_traits::construct(alloc,arr + (pos + i),val);
+                element_traits::construct(alloc,std::addressof(arr[end + i]),val);
             }
             size += n;
             return Iterator(arr + end);
         }
-        Iterator insert(std::size_t pos,std::initializer_list<T>ilist){
+        Iterator insert(const_iterator pos,std::initializer_list<T>ilist){
             if(size + ilist.size() >= capacity){
                 grow();
             }
             ssize_t end = pos - begin();
             if(is_empty()){
-                for(size_t i = 0;i < ilist.size();i++){
-                    element_traits::construct(alloc,std::addressof(arr[i]),ilist[i]);
+                int i = 0;
+                for(auto it = ilist.begin();it != ilist.end();i++,it++){
+                    element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                    size++;
                 }
-            }else{
-                std::size_t n = ilist.size();
-                for(ssize_t i = size  - 1;i > end;i++){
-                    arr[i + n] = arr[i]; 
-                }
-                for(size_t i = 0;i < n;i++){
-                    element_traits::construct(alloc,std::addressof(arr[pos + i]),ilist[i]);
-                }
+                return begin();
             }
+            std::size_t n = ilist.size();
+            // geser element ke kanan
+            for(ssize_t i = size  - 1;i > end;i--){
+                arr[i + n] = arr[i]; 
+            }
+            // insert element
+            int i = 0;
+            for(auto it = ilist.begin();it != ilist.end();i++,++it){
+                element_traits::construct(alloc,std::addressof(arr[end + i]),*it);
+            }
+            size += n;
             return Iterator(arr + end);
         }  
         template <typename It>
         requires my_input_iterator<It>
-        Iterator insert(const std::size_t pos,It first,It last){
+        Iterator insert(const_iterator pos,It first,It last){
+            int index = pos - begin();
             if(first == last){
-                return (arr + pos);
+                return (arr + index);
+            }
+            if(is_empty()){
+                int i = 0;
+                for(auto it = first;it != last;++it,i++){
+                    element_traits::construct(alloc,arr + i,*it);
+                    size++;
+                }
+                return begin();
             }
             auto n = std::distance(first,last);
             if(size + n >= capacity){
@@ -439,7 +472,6 @@ class Vector{
             for(ssize_t i = size - 1;i > 0;i--){
                 arr[i + n] = arr[i];
             }
-            int index = pos - begin();
             for(decltype(n) i = 0;i < n;i++,++first){
                 create_element(i + index,*first);
             }
@@ -510,7 +542,7 @@ class Vector{
             return Iterator(arr + first_index);
         }
     public:
-        void swap(Vector& others){
+        void swap(Vector& others)noexcept{
             // swap cap
             std::size_t temp_cap = capacity;
             capacity = others.capacity;
@@ -525,7 +557,7 @@ class Vector{
             arr = others.arr;
             others.arr = temp_container;
         }
-        void swap(Vector&& others){
+        void swap(Vector&& others)noexcept{
             // swap cap
             std::size_t temp_cap = capacity;
             capacity = others.capacity;
@@ -576,12 +608,9 @@ class Vector{
             }
             std::copy(first,last,begin(),arr);
             if(n < size){
-                // iteratif
                 for(ssize_t i = n;i < size;i++){
                     element_traits::destroy(alloc,std::addressof(arr[i]));
                 }
-                // idiomatik
-                // std::destroy(arr + n, arr + size);
             }
             size = n;
         }
@@ -603,6 +632,14 @@ class Vector{
             }
             size = n;
         }
+    // public:
+        // template<std::ranges::input_range R>
+        // void assign_range(R&& range){
+        //     auto n = range.size();
+        //     if(n > size){
+        //         grow();
+        //     }
+        // }
     private:
         void grow(){
             grow(capacity * 2);
