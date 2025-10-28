@@ -72,7 +72,7 @@ class Vector{
         }
         Vector(std::initializer_list<T>array){
             this->size = array.size();
-            this->capacity = array.size() * 2; //doubling
+            this->capacity = array.size() > 0 ? array.size() : 1;
             this->arr = element_traits::allocate(alloc,capacity);
             int i = 0;
             for(const T& x: array){
@@ -388,7 +388,7 @@ class Vector{
                 return begin();
             }
             if(size + n >= capacity){
-                grow();
+                grow(n);
             }
             ssize_t index = pos - begin();
             // geser
@@ -412,7 +412,7 @@ class Vector{
             }
             ssize_t end = pos - begin();
             if(size + n >= capacity){
-                grow();
+                grow(n);
             }
             for(ssize_t i = size - 1;i >= end;--i){
                 arr[i + n] = arr[i];
@@ -424,10 +424,11 @@ class Vector{
             return Iterator(arr + end);
         }
         Iterator insert(const_iterator pos,std::initializer_list<T>ilist){
+            ssize_t offset = pos - begin();
             if(size + ilist.size() >= capacity){
-                grow();
+                grow(ilist.size() * 2);
             }
-            ssize_t end = pos - begin();
+            ssize_t end = offset;
             if(is_empty()){
                 int i = 0;
                 for(auto it = ilist.begin();it != ilist.end();i++,it++){
@@ -438,7 +439,7 @@ class Vector{
             }
             std::size_t n = ilist.size();
             // geser element ke kanan
-            for(ssize_t i = size  - 1;i > end;i--){
+            for(ssize_t i = size  - 1;i >= end;i--){
                 arr[i + n] = arr[i]; 
             }
             // insert element
@@ -466,10 +467,10 @@ class Vector{
             }
             auto n = std::distance(first,last);
             if(size + n >= capacity){
-                grow();
+                grow(n);
             }
             //pindahkan objek
-            for(ssize_t i = size - 1;i > 0;i--){
+            for(decltype(index) i = size - 1;i > 0;i--){
                 arr[i + n] = arr[i];
             }
             for(decltype(n) i = 0;i < n;i++,++first){
@@ -614,16 +615,16 @@ class Vector{
             }
             size = n;
         }
-        void assign(std::initializer_list<T>arr){
-            if(arr.begin() == arr.end()){
+        void assign(std::initializer_list<T>l){
+            if(l.begin() == l.end()){
                 size = 0;
                 return;
             }
-            auto n = std::distance(arr.begin(),arr.end());
+            auto n = std::distance(l.begin(),l.end());
             if(n < capacity){
                 grow();
             }
-            std::copy(arr.begin(),arr.end(),arr);
+            std::copy(l.begin(),l.end(),arr);
             if(n < size){
                 for(ssize_t i = n;i < size;i++){
                     element_traits::destroy(alloc,std::addressof(arr[i]));
@@ -653,13 +654,15 @@ class Vector{
             std::size_t old_cap = capacity;
             //allocate temp
             T* temp = element_traits::allocate(alloc,new_capacity);
-            for(std::size_t i = 0;i < size;i++){
-                element_traits::construct(alloc,std::addressof(temp[i]),std::move(arr[i]));
+            if(arr != nullptr){
+                for(std::size_t i = 0;i < size;i++){
+                    element_traits::construct(alloc,std::addressof(temp[i]),std::move(arr[i]));
+                }
+                for(size_t i = 0;i < size;i++){
+                    element_traits::destroy(alloc,std::addressof(arr[i]));
+                }
+                element_traits::deallocate(alloc,arr,old_cap);
             }
-            for(size_t i = 0;i < size;i++){
-                element_traits::destroy(alloc,std::addressof(arr[i]));
-            }
-            element_traits::deallocate(alloc,arr,old_cap);
             arr = temp;
             //update cap
             capacity = new_capacity;
