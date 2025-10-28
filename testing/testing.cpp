@@ -174,3 +174,57 @@ TEST(Insert_Testing,InsertInitializerList){
     EXPECT_EQ(v.get_size(),6);
     EXPECT_EQ(actual,expectation);
 }
+TEST(Insert_Testing,InsertLargeContainer){
+    Vector<int>v = {1,2,3};
+    std::vector<int>tmp;
+    for(int i = 100;i <= 150;i++){
+        tmp.push_back(i);
+    }
+    v.insert(v.begin() + 1,tmp.begin(),tmp.end());
+    std::vector<int>expectation = {1};
+    for(int i = 100;i <= 150;i++){
+        expectation.push_back(i);
+    }
+    expectation.push_back(2);
+    expectation.push_back(3);
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
+TEST(Assign_test,AssignNelement){
+    Vector<int>v = {1,2,3,4};
+    EXPECT_EQ(v.get_size(),4);
+    v.assign(4,0);
+    std::vector<int>expectation;
+    expectation.assign(4,0);
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
+TEST(Assign_test,AssignUseInitializerList){
+    Vector<int>v = {1,2,3};
+    EXPECT_EQ(v.get_size(),3);
+    v.assign({100,200,300});
+    std::vector<int>expectation,actual;
+    expectation.assign({100,200,300});
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
+// TEST(Assign_test,AssignUseAnothersContainer){
+//     Vector<int>v = {100,200,300};
+//     EXPECT_EQ(v.get_size(),3);
+//     std::vector<int>a = {500,600,700};
+//     v.assign(a.begin(),a.end());
+//     std::vector<int>expectation,actual;
+//     expectation.assign(a.begin(),a.end());
+//     for(auto x: v){
+//         actual.push_back(x);
+//     }
+//     EXPECT_EQ(actual,expectation);
+// }
