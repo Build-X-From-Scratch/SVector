@@ -361,25 +361,26 @@ class Vector{
             return Iterator(arr + index);
         }
         Iterator insert(const_iterator pos,const T&& val){
-            int index = pos - begin();
+            auto index = pos - begin(); //convert to numeric representation
             if(is_empty()) {
                     push_back(val);
                     return Iterator(arr + index);
                 }
-                if (size + 1 > capacity) {
-                    std::size_t offset = index;
-                    grow();
-                    index = offset; // karena grow() bisa realokasi dan ubah arr
-                }
-                for (std::size_t i = size; i > index; --i) {
-                    arr[i] = std::move(arr[i - 1]); // pindahkan elemen
-                }
-                // Buat elemen baru di posisi yang kosong
-                element_traits::construct(alloc,arr + index,val);
-                ++size;
-                return Iterator(arr + index);
+            if (size + 1 > capacity) {
+                std::size_t offset = index;
+                grow();
+                index = offset; // karena grow() bisa realokasi dan ubah arr
+            }
+            for (std::size_t i = size; i > index; --i) {
+                arr[i] = std::move(arr[i - 1]); // pindahkan elemen
+            }
+            // Buat elemen baru di posisi yang kosong
+            element_traits::construct(alloc,arr + index,val);
+            ++size;
+            return Iterator(arr + index);
         }
         Iterator insert(const_iterator pos,std::size_t n,const T& val){
+            auto index = pos - begin();
             if(is_empty()){
                 for(std::size_t i = 0;i < n;i++){
                     element_traits::construct(alloc,std::addressof(arr[i]),val);
@@ -387,19 +388,23 @@ class Vector{
                 }
                 return begin();
             }
-            if(size + n >= capacity){
-                grow(n);
+            if(size + n > capacity){
+                auto offset = pos - begin(); //convert to numeric representation
+                grow(size + n);
+                index = offset;
             }
-            ssize_t index = pos - begin();
             // geser
-            for(ssize_t i = size - 1;i >= index;--i){
-                arr[i + n] = arr[i];
+            for(auto i = size - 1;i >= index;--i){
+                // arr[i + n] = arr[i];
+                element_traits::construct(alloc,std::addressof(arr[i + n]),arr[i]);
+                element_traits::destroy(alloc,std::addressof(arr[i]));
             }
             // insert element
-            for(ssize_t i = 0;i < ssize_t(n);i++){
-                element_traits::construct(alloc,std::addressof(arr[pos + i]),val);
+            for(auto i = 0;i < (n);++i){
+                element_traits::construct(alloc,std::addressof(arr[index + i]),val);
+                size++;
             }
-            size += n;
+            // size += n;
             return Iterator(arr + index);
         }
         Iterator insert(const_iterator pos,std::size_t n,const T&& val){
@@ -410,10 +415,11 @@ class Vector{
                 }
                 return begin();
             }
-            ssize_t end = pos - begin();
+            ssize_t offset = pos - begin();
             if(size + n >= capacity){
                 grow(n);
             }
+            ssize_t end = offset;
             for(ssize_t i = size - 1;i >= end;--i){
                 arr[i + n] = arr[i];
             }
@@ -453,9 +459,9 @@ class Vector{
         template <typename It>
         requires my_input_iterator<It>
         Iterator insert(const_iterator pos,It first,It last){
-            int index = pos - begin();
+            int offset = pos - begin();
             if(first == last){
-                return (arr + index);
+                return (arr + offset);
             }
             if(is_empty()){
                 int i = 0;
@@ -465,6 +471,7 @@ class Vector{
                 }
                 return begin();
             }
+            ssize_t index = offset;
             auto n = std::distance(first,last);
             if(size + n >= capacity){
                 grow(n);
@@ -672,8 +679,10 @@ class Vector{
         }
         void reserve(std::size_t n){
             //alokasi capacity baru
-            capacity = n;
-            element_traits::allocate(alloc,capacity);
+            if(n <= capacity){
+                return;
+            }
+            grow(n);
         }
         void resize(std::size_t n,const T& val){
             if(n == size){
