@@ -1,0 +1,56 @@
+╭─🎗️ King Yusuf on cachyos SVector on  main ✘1 !4 +2  
+│via  v4.1.2 
+╰─➜ ./binary_excetuble/program
+=================================================================
+==10896==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x794b929e005c at pc 0x5adc63657295 bp 0x7ffc20b2d430 sp 0x7ffc20b2d428
+WRITE of size 4 at 0x794b929e005c thread T0
+    #0 0x5adc63657294 in Vector<int, std::allocator<int>>::insert(Vector<int, std::allocator<int>>::Iterator, unsigned long, int const&&) /home/kali/SVector/implementation/../header/vector.hpp:424:28
+    #1 0x5adc6365661a in main /home/kali/SVector/implementation/implementation.cpp:5:7
+    #2 0x7d1b93627b8a  (/usr/lib/libc.so.6+0x27b8a) (BuildId: 3fb5bf3586fec17ba65a16ec9a3132455897d306)
+    #3 0x7d1b93627c4a in __libc_start_main (/usr/lib/libc.so.6+0x27c4a) (BuildId: 3fb5bf3586fec17ba65a16ec9a3132455897d306)
+    #4 0x5adc634f0114 in _start (/home/kali/SVector/binary_excetuble/program+0x2c114) (BuildId: 425fbadbdce659dd99128f2069c965b9bc938763)
+
+0x794b929e005c is located 4 bytes after 24-byte region [0x794b929e0040,0x794b929e0058)
+allocated by thread T0 here:
+    #0 0x5adc63654a5d in operator new(unsigned long) (/home/kali/SVector/binary_excetuble/program+0x190a5d) (BuildId: 425fbadbdce659dd99128f2069c965b9bc938763)
+    #1 0x5adc63657b9f in std::__new_allocator<int>::allocate(unsigned long, void const*) /usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/bits/new_allocator.h:151:27
+    #2 0x5adc63658040 in std::allocator<int>::allocate(unsigned long) /usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/bits/allocator.h:203:32
+    #3 0x5adc63658040 in std::allocator_traits<std::allocator<int>>::allocate(std::allocator<int>&, unsigned long) /usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/bits/alloc_traits.h:614:20
+    #4 0x5adc63658040 in Vector<int, std::allocator<int>>::grow(unsigned long) /home/kali/SVector/implementation/../header/vector.hpp:663:23
+    #5 0x5adc63657154 in Vector<int, std::allocator<int>>::insert(Vector<int, std::allocator<int>>::Iterator, unsigned long, int const&&) /home/kali/SVector/implementation/../header/vector.hpp:420:17
+    #6 0x5adc6365661a in main /home/kali/SVector/implementation/implementation.cpp:5:7
+    #7 0x7d1b93627b8a  (/usr/lib/libc.so.6+0x27b8a) (BuildId: 3fb5bf3586fec17ba65a16ec9a3132455897d306)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /home/kali/SVector/implementation/../header/vector.hpp:424:28 in Vector<int, std::allocator<int>>::insert(Vector<int, std::allocator<int>>::Iterator, unsigned long, int const&&)
+Shadow bytes around the buggy address:
+  0x794b929dfd80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x794b929dfe00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x794b929dfe80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x794b929dff00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x794b929dff80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x794b929e0000: fa fa 00 00 00 fa fa fa 00 00 00[fa]fa fa fa fa
+  0x794b929e0080: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x794b929e0100: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x794b929e0180: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x794b929e0200: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x794b929e0280: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==10896==ABORTING
