@@ -388,14 +388,13 @@ class Vector{
                 }
                 return begin();
             }
-            if(size + n > capacity){
+            if(size + n >= capacity){
                 auto offset = pos - begin(); //convert to numeric representation
-                grow(size + n);
+                grow(n);
                 index = offset;
             }
             // geser
-            for(auto i = size - 1;i >= index;--i){
-                // arr[i + n] = arr[i];
+            for(auto i = size - 1;i > index;--i){
                 element_traits::construct(alloc,std::addressof(arr[i + n]),arr[i]);
                 element_traits::destroy(alloc,std::addressof(arr[i]));
             }
@@ -408,6 +407,11 @@ class Vector{
             return Iterator(arr + index);
         }
         Iterator insert(const_iterator pos,std::size_t n,const T&& val){
+            ssize_t offset = pos - begin();
+            if(size + n >= capacity){
+                grow(n * 2);
+            }
+            ssize_t end = offset;
             if(is_empty()){
                 for(std::size_t i = 0;i < n;i++){
                     element_traits::construct(alloc,arr + i,val);
@@ -415,18 +419,13 @@ class Vector{
                 }
                 return begin();
             }
-            ssize_t offset = pos - begin();
-            if(size + n >= capacity){
-                grow(n);
-            }
-            ssize_t end = offset;
             for(ssize_t i = size - 1;i >= end;--i){
                 arr[i + n] = arr[i];
             }
-            for(ssize_t i = 0;i < std::size_t(n);i++){
+            for(ssize_t i = 0;i < ssize_t(n);i++){
                 element_traits::construct(alloc,std::addressof(arr[end + i]),val);
             }
-            size += n;
+            this->size += n;
             return Iterator(arr + end);
         }
         Iterator insert(const_iterator pos,std::initializer_list<T>ilist){
@@ -655,13 +654,10 @@ class Vector{
         }
         void grow(std::size_t min_cap){
             std::size_t new_capacity = capacity *  2;
-            if(new_capacity < min_cap){
-                new_capacity = min_cap;
-            }
+            new_capacity = new_capacity < min_cap ? min_cap : new_capacity;
             std::size_t old_cap = capacity;
             //allocate temp
             T* temp = element_traits::allocate(alloc,new_capacity);
-            if(arr != nullptr){
                 for(std::size_t i = 0;i < size;i++){
                     element_traits::construct(alloc,std::addressof(temp[i]),std::move(arr[i]));
                 }
@@ -669,7 +665,6 @@ class Vector{
                     element_traits::destroy(alloc,std::addressof(arr[i]));
                 }
                 element_traits::deallocate(alloc,arr,old_cap);
-            }
             arr = temp;
             //update cap
             capacity = new_capacity;
