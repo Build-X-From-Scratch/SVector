@@ -409,7 +409,7 @@ class Vector{
         Iterator insert(const_iterator pos,std::size_t n,const T&& val){
             ssize_t offset = pos - begin();
             if(size + n >= capacity){
-                grow(size + n );
+                grow(n * 2);
             }
             ssize_t end = offset;
             if(is_empty()){
