@@ -216,15 +216,15 @@ TEST(Assign_test,AssignUseInitializerList){
     }
     EXPECT_EQ(actual,expectation);
 }
-// TEST(Assign_test,AssignUseAnothersContainer){
-//     Vector<int>v = {100,200,300};
-//     EXPECT_EQ(v.get_size(),3);
-//     std::vector<int>a = {500,600,700};
-//     v.assign(a.begin(),a.end());
-//     std::vector<int>expectation,actual;
-//     expectation.assign(a.begin(),a.end());
-//     for(auto x: v){
-//         actual.push_back(x);
-//     }
-//     EXPECT_EQ(actual,expectation);
-// }
+TEST(Assign_test,AssignUseAnothersContainer){
+    Vector<int>v = {100,200,300};
+    EXPECT_EQ(v.get_size(),3);
+    std::vector<int>a = {500,600,700};
+    v.assign(a.begin(),a.end());
+    std::vector<int>expectation,actual;
+    expectation.assign(a.begin(),a.end());
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expectation);
+}
