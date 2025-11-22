@@ -31,6 +31,7 @@ SOFTWARE.
 #include <initializer_list>
 #include <ostream>
 #include <concepts>
+#include <algorithm>
 #include <ranges>
 #include <stdexcept>
 #include <sys/types.h>
@@ -611,9 +612,9 @@ class Vector{
             }
             auto n = std::distance(first,last);
             if(n >= capacity){
-                grow();
+                grow(n);
             }
-            std::copy(first,last,begin(),arr);
+            std::copy(first,last,arr);
             if(n < size){
                 for(ssize_t i = n;i < size;i++){
                     element_traits::destroy(alloc,std::addressof(arr[i]));
