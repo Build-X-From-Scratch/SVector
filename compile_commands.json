@@ -3,14 +3,11 @@
     "arguments": [
       "/usr/bin/clang++",
       "-c",
-      "-std=c++20",
-      "-o",
-      "program",
+      "-std=c++23",
       "implementation/implementation.cpp"
     ],
     "directory": "/home/kali/SVector",
-    "file": "/home/kali/SVector/implementation/implementation.cpp",
-    "output": "/home/kali/SVector/program"
+    "file": "/home/kali/SVector/implementation/implementation.cpp"
   },
   {
     "arguments": [
@@ -20,7 +17,7 @@
       "x86_64-pc-linux-gnu",
       "-emit-obj",
       "-dumpdir",
-      "program-",
+      "a-",
       "-disable-free",
       "-clear-ast-before-backend",
       "-disable-llvm-verifier",
@@ -45,7 +42,7 @@
       "-fdebug-compilation-dir=/home/kali/SVector",
       "-fcoverage-compilation-dir=/home/kali/SVector",
       "-resource-dir",
-      "/usr/lib/clang/20",
+      "/usr/lib/clang/21",
       "-internal-isystem",
       "/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1",
       "-internal-isystem",
@@ -53,7 +50,7 @@
       "-internal-isystem",
       "/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../include/c++/15.2.1/backward",
       "-internal-isystem",
-      "/usr/lib/clang/20/include",
+      "/usr/lib/clang/21/include",
       "-internal-isystem",
       "/usr/local/include",
       "-internal-isystem",
@@ -62,10 +59,11 @@
       "/include",
       "-internal-externc-isystem",
       "/usr/include",
-      "-std=c++20",
+      "-std=c++23",
       "-fdeprecated-macro",
       "-ferror-limit",
       "19",
+      "-fmessage-length=203",
       "-stack-protector",
       "2",
       "-fgnuc-version=4.2.1",
@@ -79,11 +77,11 @@
       "-x",
       "c++",
       "-o",
-      "/tmp/implementation-490496.o",
+      "/tmp/implementation-cc0edc.o",
       "implementation/implementation.cpp"
     ],
     "directory": "/home/kali/SVector",
     "file": "/home/kali/SVector/implementation/implementation.cpp",
-    "output": "/tmp/implementation-490496.o"
+    "output": "/tmp/implementation-cc0edc.o"
   }
 ]

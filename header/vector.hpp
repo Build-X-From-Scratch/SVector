@@ -21,8 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#ifndef __VECTOR
-#define __VECTOR
+#ifndef VECTOR
+#define VECTOR
+#if defined(__cpp_lib_ranges) && __cpp_lib_ranges >= 202202L
+    #define HAS_INSERT_RANGE 1
+#else
+    #define HAS_INSERT_RANGE 0
+#endif
 #include <cstddef>
 #include <iterator>
 #include <limits>
@@ -640,14 +645,63 @@ class Vector{
             }
             size = n;
         }
-    // public:
-        // template<std::ranges::input_range R>
-        // void assign_range(R&& range){
-        //     auto n = range.size();
-        //     if(n > size){
-        //         grow();
-        //     }
-        // }
+    public:
+    #if HAS_INSERT_RANGE
+        template<std::ranges::input_range R>
+        constexpr Iterator assign_range(const_iterator pos,R&& range){
+            auto n = range.size();
+            auto offset = pos - begin();
+            if(n > size){
+                grow(size + n);
+            }
+            auto end = offset; 
+            if(is_empty()){
+               int i = 0;
+                for(auto it = range.begin();it != range.end();it++,i++){
+                    element_traits::construct(alloc,arr + i,*it); //deferencing it
+                }
+                return begin();
+            }
+            //geser element kekanan
+            for(ssize_t i = size - 1;i >=end;i--){
+                arr[i] = arr[i + n];
+            }
+            int i = 0;
+            for(ssize_t it = range.begin();it != range.end();++it,++i){
+                element_traits::construct(alloc,std::addressof(arr[i + n]));
+            }
+            return Iterator(arr + end);
+        }
+    #else
+        constexpr Iterator assign_range(const_iterator pos,std::initializer_list<T>arr){
+            auto n  = arr.size();
+            auto offset = pos - begin();
+            if(n > size){
+                grow(size + n);
+            }
+            auto end = pos;
+            if(is_empty()){
+                int i = 0;
+                for(auto x: arr){
+                    element_traits::construct(alloc,arr + i,x);
+                    i++;
+                }
+                return begin();
+            }
+            //geser element ke ke kekanan untuk menghindari memory fragmentation
+            for(ssize_t i = size - 1;i >= end;i--){
+                arr[i] = arr[i + n];
+            }
+            //insert element dari pos kekanan
+            int i = 0;
+            for(auto x: arr){
+                element_traits::construct(alloc,std::addressof(arr[i + n]),x);
+                i++;
+            }
+            this->size += n;
+            return Iterator(arr + end);
+        }
+    #endif
     private:
         void grow(){
             grow(capacity * 2);
