@@ -40,4 +40,4 @@ Issues: # <!-- if don't have a issue,please do not fill this>
 
 # License
 This Commit License  
-https://github.com/Build-X-From-Scratch/forward_list_sratch/blob/main/LICENSE
+https://github.com/Build-X-From-Scratch/SVector/blob/main/LICENSE
