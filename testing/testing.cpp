@@ -2,6 +2,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include "../header/vector.hpp"
+using namespace mystl;
 TEST(push_testing,Push_back_basicTest){
     Vector<int>v  = {1,2,3,4,5};
     EXPECT_EQ(v.get_size(),5);
@@ -227,4 +228,28 @@ TEST(Assign_test,AssignUseAnothersContainer){
         actual.push_back(x);
     }
     EXPECT_EQ(actual,expectation);
+}
+TEST(delete_test,deleteSingleElementAtFront){
+    Vector<int>v = {1,2,3,4,5};
+    int size = v.get_size();
+    EXPECT_EQ(v.get_size(),5);
+    v.erase(v.begin() + 0);
+    EXPECT_EQ(v.get_size(),size - 1);
+    std::vector<int>expected,actual;
+    expected = {2,3,4,5};
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expected);
+}
+TEST(delete_test,DeleteNElement){
+    Vector<int>v = {100,200,300,400,500,600,700};
+    int size = v.get_size();
+    v.erase(v.begin() + 0,v.begin() + 2);
+    std::vector<int>expected = {300,400,500,600,700};
+    std::vector<int>actual;
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expected);
 }
