@@ -556,6 +556,64 @@ class Vector{
             return Iterator(arr + first_index);
         }
     public:
+        /**
+        * @brief erase if adalah method untuk melakukan operasi penghapusan element berdasarkan
+        * kondisi tertentu yang di interpretasikan melalui sebuah template predicate.dengan method
+        * ini user dapat menghapus element dengan kriteria tertentu langsung tanpa harus melakukan
+        * loop manual dan memanggil method erase terus menerus
+        * @see erase method
+        */
+        template <class UnaryPred>
+        requires(std::predicate<UnaryPred&,const T&>)
+        Iterator remove_if(UnaryPred p){
+            if(is_empty()){
+                return begin();
+            }
+            int count_erase = 0;
+            for(int i = 0;i < size;i++){
+                if(p(arr[i])){
+                    erase(arr[i]);
+                    count_erase++;
+                }else{
+                    continue;
+                }
+            }
+            size -= count_erase;
+            return begin();
+        }
+    public:
+        /**
+        * @brief emplace adalah method untuk insert element langsung tanpa membuat temporary object
+        * @details misal saat insert/push,method ini membutuhkan object terlebih dahulu berbeda dengan
+        * emplace yang dimana langsung mengontruksi object langsung ditempat sehingga lebih efisien
+        */
+        template <class... Args>
+        Iterator emplace(Args&&... args){
+            if(size == capacity){
+                grow(size * 2);
+            }
+            int pos = size;
+            element_traits::construct(alloc,arr + size,T(std::forward<Args>(args)...));
+            size++;
+            return Iterator(arr + pos);
+        }
+        template<class... Args>
+        void emplace_back(Args&&... args){
+            if(size == capacity){
+                grow(size * 2);
+            }
+            element_traits::construct(alloc,arr + size,T(std::forward<Args>(args)...));
+            size++;
+        }
+        template <class... Args>
+        T& emplace_back(Args&&... args){
+            if(size == capacity){
+                grow(size * 2);
+            }
+            element_traits::construct(alloc,arr + size ,T(std::forward<Args>(args)...));
+            return arr[size++]; //return pos arr setelah emplace 
+        }
+    public:
         void swap(Vector& others)noexcept{
             // swap cap
             std::size_t temp_cap = capacity;
