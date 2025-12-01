@@ -40,6 +40,7 @@ SOFTWARE.
 #include <ranges>
 #include <stdexcept>
 #include <sys/types.h>
+namespace mystl{
 template <typename It>
 concept my_input_iterator = requires(It it) {
     *it;    // Bisa di-dereference
@@ -501,11 +502,11 @@ class Vector{
         * retutn end();
         *
         */
-        Iterator erase(Iterator pos){
+        Iterator erase(const_iterator pos){ //ini berdasarkan posisi saja
             if(is_empty()){
                 throw std::underflow_error("container is empty");
             }
-            if(pos == end()){
+            if(pos - begin() == begin() - end()){ //jika empty sebenar ;
                 return end();
             }
             // destory and deallocate element
@@ -517,15 +518,15 @@ class Vector{
             // 1 2 3 4 5
             // 1 3 4 5
             // destroy
-            destroy(size - 1);
-            size--;
+            element_traits::destroy(alloc,std::addressof(arr[size - 1])); //destroy elemnt
+            size--; //decrement size;
             if(index <= size){
                 return end();
             }
-            return Iterator(arr + index);
+            return Iterator(arr + index); //return posisi penghapusan
         }
-        Iterator erase(Iterator first,Iterator last){
-            if(first == last){ //end
+        Iterator erase(const_iterator first,const_iterator last){
+            if(first - begin() == last - begin()){ //end
                 return first;
             }
             if(is_empty()){
@@ -813,5 +814,6 @@ std::ostream& operator<<(std::ostream& os,const Vector<U>& others){
     }
     os << "]";
     return os;
+}
 }
 #endif
