@@ -586,16 +586,17 @@ class Vector{
         * @brief emplace adalah method untuk insert element langsung tanpa membuat temporary object
         * @details misal saat insert/push,method ini membutuhkan object terlebih dahulu berbeda dengan
         * emplace yang dimana langsung mengontruksi object langsung ditempat sehingga lebih efisien
+        * @see variadic template adalah template yg memunkinkan objeck untuk menerima berbagai parameter
         */
-        template <class... Args>
-        Iterator emplace(Args&&... args){
+        template <class... Args> 
+        Iterator emplace(const_iterator pos,Args&&... args){
             if(size == capacity){
                 grow(size * 2);
             }
-            int pos = size;
-            element_traits::construct(alloc,arr + size,T(std::forward<Args>(args)...));
+            auto n = pos - begin();
+            element_traits::construct(alloc,n,T(std::forward<Args>(args)...));
             size++;
-            return Iterator(arr + pos);
+            return Iterator(arr + n);
         }
         template<class... Args>
         void emplace_back(Args&&... args){
@@ -613,6 +614,111 @@ class Vector{
             element_traits::construct(alloc,arr + size ,T(std::forward<Args>(args)...));
             return arr[size++]; //return pos arr setelah emplace 
         }
+    public:
+        template <std::ranges::input_range R>
+        constexpr Iterator insert_range(const_iterator pos,R&& r){
+            auto n = std::ranges::size(r);
+            auto offset = pos - begin(); //represent iterator on numeric representation
+            if(size + n >= capacity){
+                grow(size + n);
+            }
+            auto end = offset;
+            if(is_empty()){
+                //langsung insert
+                int i = 0;
+                for(auto it = r.begin();it != r.end();++it,++i){
+                    element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                }
+                return begin();
+            }   
+            //geser element ke kanan
+            for(ssize_t i = size - 1;i >= end;--i){
+                arr[i + n] = arr[i];
+            }
+            //construct element
+            int iter = 0;
+            for(auto i = r.begin();i != r.end();i++,++iter){
+                element_traits::construct(alloc,std::addressof(arr[i + n]),*i);
+            }
+            return Iterator(arr + end);
+        }
+    public:
+        /**
+        * @brief merge adalah built in function untuk menggabungkan sebuah container dengan object vector diposisi end(arr + size)
+        * method ini akan memiliki 3 overload function yaitu:
+        - memakai parameter input iterator
+        - memamaki range constructor
+        - memakai initializer list
+        - memakai parameter vector dari object lain(const Vector& others)
+        - untuk optimisasi kita dapat memakai mekanisme three pairs dengan memanggil overload dengan parameter input iterator
+        */
+        template <typename It>
+        requires my_input_iterator<It>
+        Iterator merge(It first,It last){
+            auto n = std::distance(first,last);
+            auto offset = size - 1;
+            if(ensure_capacity()){
+                grow(size + n);
+            }
+            if(is_empty()){
+                //construct element langsung
+                int i = 0;
+                for(auto it = first;it != last;++it,++i){
+                    element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                }
+                return Iterator(arr + offset);
+            }
+            //construct element diakhir
+            int i = 0;
+            for(auto it = first;it != last;++it,++i){
+                element_traits::construct(alloc,std::addressof(arr[size + i]),*it);
+            }
+            //destroy semua element lama
+            return Iterator(arr + offset);
+        }
+        template <std::ranges::input_range R>
+        Iterator merge(R&& rg){
+            auto offset = size - 1;
+            auto n = std::ranges::size(rg);
+            if(size + n >= capacity){
+                grow(size + n);
+            }
+            if(is_empty()){
+                //construct element
+                int i = 0;
+                for(auto it = rg.begin();it != rg.end();++it,++i){
+                    element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                }
+                return begin();
+            }
+            //construct elemen
+            int i = 0;
+            for(auto it = rg.begin();it != rg.end();++it,++i){
+                element_traits::construct(alloc,std::addressof(arr[size + i]),*it);
+            }
+            return Iterator(arr + offset);
+        }
+        Iterator merge(const Vector& others){
+            auto offset = size - 1;
+            if(size + others.size >= capacity){
+                grow(size + others.size);
+            }
+            auto end = offset;
+            if(is_empty()){
+                //langsung contruct elemnt
+                int i = 0;
+                for(auto it = others.begin();it != others.end();++it,++i){
+                    element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                }
+                return Iterator(arr + end);
+            }
+            //consruct element
+            int i = 0;
+            for(auto it = others.begin();it != others.end();++it,++i){
+                element_traits::construct(alloc,std::addressof(arr[size + i]),*it);
+            }
+            return Iterator(arr + end);
+        }   
     public:
         void swap(Vector& others)noexcept{
             // swap cap
