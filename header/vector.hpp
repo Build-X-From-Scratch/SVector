@@ -40,6 +40,7 @@ SOFTWARE.
 #include <ranges>
 #include <stdexcept>
 #include <sys/types.h>
+#include <cassert>
 namespace mystl{
 template <typename It>
 concept my_input_iterator = requires(It it) {
@@ -657,66 +658,82 @@ class Vector{
         Iterator merge(It first,It last){
             auto n = std::distance(first,last);
             auto offset = size - 1;
-            if(ensure_capacity()){
+            if(size + n >= capacity){
+                ssize_t size_awal = size;
                 grow(size + n);
+                //assert(size_awal + n == capacity);
             }
+            auto end = offset;
             if(is_empty()){
+                assert(is_empty());
                 //construct element langsung
                 int i = 0;
-                for(auto it = first;it != last;++it,++i){
-                    element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                for(;first != last;++first,++i){
+                    element_traits::construct(alloc,std::addressof(arr[i]),*first);
                 }
-                return Iterator(arr + offset);
+                return begin();
             }
+            ssize_t old_size = size;
             //construct element diakhir
             int i = 0;
-            for(auto it = first;it != last;++it,++i){
-                element_traits::construct(alloc,std::addressof(arr[size + i]),*it);
+            for(;first != last;++first,++i){
+                element_traits::construct(alloc,std::addressof(arr[old_size + i]),*first);
+                //assert(size == capacity);
             }
-            //destroy semua element lama
-            return Iterator(arr + offset);
+            size += n;
+            return Iterator(arr + end);
         }
         template <std::ranges::input_range R>
         Iterator merge(R&& rg){
             auto offset = size - 1;
-            auto n = std::ranges::size(rg);
-            if(size + n >= capacity){
-                grow(size + n);
+            auto n = std::distance(rg.begin(),rg.end());
+            //ssize_t size_awal = size;
+            if(size - 1 + n > capacity){
+                assert(size - 1 + n >= capacity);
+                grow(size - 1 + n);
             }
+            auto end = offset;
+            ssize_t old_size = size;
+            //assert(size_awal + n == size);
             if(is_empty()){
                 //construct element
                 int i = 0;
                 for(auto it = rg.begin();it != rg.end();++it,++i){
                     element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                   // size++;
                 }
                 return begin();
             }
             //construct elemen
             int i = 0;
             for(auto it = rg.begin();it != rg.end();++it,++i){
-                element_traits::construct(alloc,std::addressof(arr[size + i]),*it);
+                element_traits::construct(alloc,std::addressof(arr[old_size + i]),*it);
             }
-            return Iterator(arr + offset);
+            size += n;
+            return Iterator(arr + end);
         }
         Iterator merge(const Vector& others){
             auto offset = size - 1;
             if(size + others.size >= capacity){
-                grow(size + others.size);
+                grow(others.size);
             }
             auto end = offset;
+            ssize_t old_size = size;
             if(is_empty()){
                 //langsung contruct elemnt
                 int i = 0;
                 for(auto it = others.begin();it != others.end();++it,++i){
                     element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                    size++;
                 }
                 return Iterator(arr + end);
             }
             //consruct element
             int i = 0;
             for(auto it = others.begin();it != others.end();++it,++i){
-                element_traits::construct(alloc,std::addressof(arr[size + i]),*it);
+                element_traits::construct(alloc,std::addressof(arr[old_size = size + i]),*it);
             }
+            size += others.size;
             return Iterator(arr + end);
         }   
     public:

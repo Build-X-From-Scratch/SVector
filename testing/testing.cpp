@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <initializer_list>
 #include <stdexcept>
+#include <random>
 #include "../header/vector.hpp"
 using namespace mystl;
 TEST(push_testing,Push_back_basicTest){
@@ -249,6 +250,41 @@ TEST(delete_test,DeleteNElement){
     std::vector<int>expected = {300,400,500,600,700};
     std::vector<int>actual;
     for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expected);
+}
+TEST(merge_test,UseInputIterator){
+    std::vector<int>temp = {100,200,400};
+    int sizeTemp = temp.size();
+    mystl::Vector<int>a = {10,20,40};
+    int sizeA = a.get_size();
+    a.merge(temp.begin(),temp.end());
+    EXPECT_EQ(a.get_size(),(sizeTemp + sizeA));
+    std::vector<int>expected,actual;
+    expected = {10,20,40,100,200,400,};
+    for(auto x: a){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expected);
+}
+TEST(merge_test,UseInputIteratorRand){
+    std::vector<int>temp = {500,600,700};
+    std::vector<int>expected,actual;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<>dist(1,10000);
+    Vector<int>a;
+    for(int i = 0;i < 10;++i){
+        int x = dist(gen);
+        a.push_back(x);
+        expected.push_back(x);
+    }   
+    for(auto x: temp){
+        expected.push_back(x);
+    }
+    a.merge(temp);
+    for(auto x: a){
         actual.push_back(x);
     }
     EXPECT_EQ(actual,expected);
