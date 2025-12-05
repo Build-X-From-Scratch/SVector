@@ -737,6 +737,69 @@ class Vector{
             return Iterator(arr + end);
         }   
     public:
+        template <class inputIt>
+        requires std::input_iterator<inputIt>
+        Iterator merge_range(const_iterator pos,inputIt first,inputIt last){
+            auto p = pos - begin();
+            auto n = std::distance(first,last);
+            if(size + n > capacity){
+                grow(size + n);
+            }
+            if(is_empty()){
+                //langsung construct element 
+                int i = 0;
+                for(;first != last;++first,++i,++first){
+                    element_traits::construct(alloc,std::addressof(arr[i]),*first);
+                }
+                size += n;
+                return begin();
+            }
+            auto offset = p;
+            //geser element kekanan
+            for(ssize_t i = size - 1;i >= offset;--i){
+                arr[i + n] = arr[i];
+            }
+            //construct element
+            int i = 0;
+            for(;first != last;++first,++i){
+                element_traits::construct(alloc,std::addressof(arr[offset + i]),*first);
+            }
+            return Iterator(arr + offset);
+        }
+        Iterator merge_range(Vector& others){
+            merge_range(others.begin(),others.end());
+        }
+        template <class ranges>
+        requires std::ranges::input_range<ranges>
+        Iterator merge_range(const_iterator pos,ranges&& r){
+            
+        }
+    public:
+        /**
+        * @brief reversse adalah built in function untuk reverse element pada container
+        * algoritma yang dipakai adalah two pointer agar menjaga kompleksitas menjadi O(n)
+        */
+        void reverse(){
+            if(is_empty()){
+                return;
+            }
+            int left = 0;
+            int right = size - 1;
+            while(left < right){
+                int temp = arr[left];
+                arr[left] = arr[right];
+                arr[right] = temp;
+                //majukan posisi left,dan mundurkan posisi right
+                right--;
+                left++;
+            }
+        }
+        template <class inputIt>
+        requires std::input_iterator<inputIt>
+        Iterator insert_reverse(const_iterator pos,inputIt first,inputIt last){
+            
+        }
+    public:
         void swap(Vector& others)noexcept{
             // swap cap
             std::size_t temp_cap = capacity;
