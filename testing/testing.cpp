@@ -289,3 +289,36 @@ TEST(merge_test,UseInputIteratorRand){
     }
     EXPECT_EQ(actual,expected);
 }
+TEST(merge_ReverseTest,MergeReverseUseInputIter){
+    mystl::Vector<int>v = {100,200,300};
+    mystl::Vector<int>x = {4,5,6};
+    v.merge_reverse(x.begin(),x.end());
+    std::vector<int>expected,actual;
+    expected = {100,200,300,6,5,4};
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expected);
+}
+TEST(merge_ReverseTest,MergeReverseUseVectorObj){
+    mystl::Vector<int>v = {100,200,300};
+    mystl::Vector<int>x = {4,5,6};
+    v.merge_reverse(x);
+    std::vector<int>expected,actual;
+    expected = {100,200,300,6,5,4};
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expected);
+}
+TEST(merge_ReverseTest,MergeReverseUseRanges){
+    mystl::Vector<int>v = {100,200,300};
+    std::vector<int>x = {4,5,6};
+    v.merge_reverse(x);
+    std::vector<int>expected,actual;
+    expected = {100,200,300,6,5,4};
+    for(auto x: v){
+        actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expected);
+}
