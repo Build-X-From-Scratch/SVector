@@ -735,10 +735,74 @@ class Vector{
             }
             size += others.size;
             return Iterator(arr + end);
-        }   
+        }  
+
     public:
-        template <class inputIt>
-        requires std::input_iterator<inputIt>
+        template <std::input_iterator It>
+        Iterator merge_reverse(It first,It last){
+            auto n = std::distance(first,last);
+            auto old_size = size; //offset yang digunakan saat terjadi realokasi
+            if(size + n > capacity){
+                grow(size + n);
+            }
+            //1 1 1 1 1 _ _ _
+            //the main strategy is try insert position size + n - i,smart decision?
+            auto start = old_size;
+            ssize_t end_index = start + n - 1;
+            if(is_empty()){
+                ssize_t end = end_index;
+                for(;first != last;++first,--end){
+                    element_traits::construct(alloc,std::addressof(arr[end]),*first);
+                }
+                size += n;
+                return begin();
+            }
+            //insert position size + n - i
+            ssize_t end = end_index;
+            for(;first != last;++first,--end){
+                element_traits::construct(alloc,std::addressof(arr[end]),*first);
+            }
+            size += n;
+            return Iterator(arr + start);
+        } 
+        Iterator merge_reverse(Vector& others){
+            return merge_reverse(others.begin(),others.end());
+        }
+        template <std::ranges::input_range R>
+        Iterator merge_reverse(R&& r){
+            return merge_reverse(r.begin(),r.end());
+        }
+    public:
+        template <std::input_iterator It>
+        Iterator insert_reverse(const_iterator pos,It first,It last){
+            auto n = std::distance(first,last);
+            auto offset = pos - begin();
+            if(size + n > capacity){
+                grow(size + n);
+            }
+            auto end = offset;
+            //insert di posisi ->pos + n - i
+            if(is_empty()){
+                //insert diposisi size + n - i
+                int i = 0;
+                for(;first != last;++first,++i){
+                    element_traits::construct(alloc,std::addressof(arr[n - i]),*first);
+                }
+                return begin();
+            }
+            //geser element ke kanan
+            for(ssize_t i = size - 1;i >= end;--i){
+                arr[i + n] = arr[i];
+            }
+            //insert element
+            ssize_t i = 0;
+            for(;first != last;++first,++i){
+                element_traits::construct(alloc,std::addressof(arr[end + n - i]),*first);
+            }
+            return Iterator(arr + end);
+        }
+    public:
+        template <std::input_iterator inputIt>
         Iterator merge_range(const_iterator pos,inputIt first,inputIt last){
             auto p = pos - begin();
             auto n = std::distance(first,last);
@@ -766,13 +830,12 @@ class Vector{
             }
             return Iterator(arr + offset);
         }
-        Iterator merge_range(Vector& others){
-            merge_range(others.begin(),others.end());
+        Iterator merge_range(const_iterator pos,Vector& others){
+            return merge_range(pos,others.begin(),others.end());
         }
-        template <class ranges>
-        requires std::ranges::input_range<ranges>
+        template <std::ranges::input_range ranges>
         Iterator merge_range(const_iterator pos,ranges&& r){
-            
+            return merge(pos,r.begin(),r.end());
         }
     public:
         /**
@@ -794,11 +857,11 @@ class Vector{
                 left++;
             }
         }
-        template <class inputIt>
-        requires std::input_iterator<inputIt>
-        Iterator insert_reverse(const_iterator pos,inputIt first,inputIt last){
+        // template <class inputIt>
+        // requires std::input_iterator<inputIt>
+        // Iterator insert_reverse(const_iterator pos,inputIt first,inputIt last){
             
-        }
+        // }
     public:
         void swap(Vector& others)noexcept{
             // swap cap
