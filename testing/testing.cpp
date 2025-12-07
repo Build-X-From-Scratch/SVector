@@ -4,6 +4,38 @@
 #include <random>
 #include "../header/vector.hpp"
 using namespace mystl;
+template <typename T>
+class VectorT : public testing::Test{
+    protected:
+        mystl::Vector<T>v;
+    public:
+        void SetUp()override{
+            v = mystl::Vector<T>{100,200,400,120};
+        }
+};
+template <typename T>
+class RandomVector: public testing::Test{
+    protected:
+        mystl::Vector<T>v;
+    public:
+        void SetUp() override{
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<>dist(1,10000);
+            for(int i = 0;i < 100;i++){
+                v.push_back(dist(gen));
+            }
+        }
+};
+template <typename T>
+class EmptyVector: public testing::Test{
+    protected:
+        mystl::Vector<T>v;
+    public:
+        void SetUp()override{
+            v = mystl::Vector<T>{};
+        }
+};
 TEST(push_testing,Push_back_basicTest){
     Vector<int>v  = {1,2,3,4,5};
     EXPECT_EQ(v.get_size(),5);
