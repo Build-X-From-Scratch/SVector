@@ -147,6 +147,7 @@ class Vector{
         class Iterator{
             private:
                 T* ptr;
+                Vector* p;
             public: 
             //iterator traits
                 friend class Vector;
@@ -176,6 +177,23 @@ class Vector{
                 }
                 bool operator!=(const Iterator& others){
                     return ptr != others.ptr;
+                }
+                bool operator<=>(const Iterator& others){
+                    
+                }
+                bool operator>(const Iterator& others){
+                    auto& container = others.p->size > ptr->size ? others.ptr->size : ptr->size;
+                    for(ssize_t i = 0;i < container;i++){
+                        if(!ptr[i + 1]){
+                            return true;
+                        }
+                        if(!others.ptr[i + 1]){
+                            return false;
+                        }
+                        if(ptr[i] != others.ptr[i]){
+                            break;
+                        }
+                    }
                 }
                 Iterator operator+(difference_type i)const{
                     return Iterator(ptr + i);
@@ -838,10 +856,6 @@ class Vector{
             return merge(pos,r.begin(),r.end());
         }
     public:
-        /**
-        * @brief reversse adalah built in function untuk reverse element pada container
-        * algoritma yang dipakai adalah two pointer agar menjaga kompleksitas menjadi O(n)
-        */
         void reverse(){
             if(is_empty()){
                 return;
@@ -892,6 +906,32 @@ class Vector{
             T* temp_container = arr;
             arr = others.arr;
             others.arr = temp_container;
+        }
+    public:
+        template <std::ranges::input_range R>
+        constexpr void append_range(R&& r){
+            if(r.begin() == r.end()){
+                return;
+            }
+            auto offset = size;
+            auto n = std::distance(r.begin(),r.end());
+            if(size + n > capacity){
+                assert(size + n > capacity);
+                grow(size + n);
+            }
+            auto end = offset;
+            if(is_empty()){
+                int i = 0;
+                for(auto it = r.begin();it != r.end();++it,++i){
+                    element_traits::construct(alloc,std::addressof(arr[i]),*it);
+                }
+                return;
+            }
+            int i = 0;
+            for(auto it = r.begin();it != r.end();++it,++i){
+                element_traits::construct(alloc,std::addressof(arr[end + i]),*it);
+            }
+            return;
         }
     public:
         /***
