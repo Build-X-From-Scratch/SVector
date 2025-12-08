@@ -178,22 +178,17 @@ class Vector{
                 bool operator!=(const Iterator& others){
                     return ptr != others.ptr;
                 }
-                bool operator<=>(const Iterator& others){
-                    
-                }
-                bool operator>(const Iterator& others){
-                    auto& container = others.p->size > ptr->size ? others.ptr->size : ptr->size;
-                    for(ssize_t i = 0;i < container;i++){
-                        if(!ptr[i + 1]){
-                            return true;
-                        }
-                        if(!others.ptr[i + 1]){
-                            return false;
-                        }
-                        if(ptr[i] != others.ptr[i]){
-                            break;
-                        }
+                const bool operator>(const Iterator& others)const{
+                    if(std::lexicographical_compare(p->begin(),p->end(),others.p->begin(),others.p->end())){
+                        return true;   
                     }
+                    return false;
+                }
+                const bool operator<(const Iterator& others)const{
+                    return std::lexicographical_compare(p->begin(),p->end(),others.p->begin(),others.p->end());
+                }
+                auto operator<=>(const Iterator& others)const{
+                    return std::lexicographical_compare_three_way(p->begin(),p->end(),others.p->begin(),others.p->end());
                 }
                 Iterator operator+(difference_type i)const{
                     return Iterator(ptr + i);
