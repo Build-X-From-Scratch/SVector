@@ -1,4 +1,3 @@
-
 <p align="center">
   <img src="docs/banner2.png" width="100%">
 </p>
@@ -7,6 +6,8 @@
 
 Stree is personal project to develop Vector from sratch with purpose learn memory management,continus allocation and low level,this project have unique challenge because allocation used is continus allocation which have change memory fragmentation occurs.
 
+> ![note]
+> this project on going develoment
 
 # Requirements
 
@@ -29,7 +30,6 @@ include(FetchContent)
 FetchContent_Declare(
   vector
   GIT_REPOSITORY https://github.com/Build-X-From-Scratch/SVector.git
-  GIT_TAG v1.0.0
 )
 
 FetchContent_MakeAvailable(vector)
@@ -50,6 +50,7 @@ after setup instalation,you can include header example:
 ```cpp
 #include <Vector>
 ```
+
 if done,you ready to use this library,this example use method that exist an library
 
 ```cpp
