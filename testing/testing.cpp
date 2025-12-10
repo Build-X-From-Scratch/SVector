@@ -1,3 +1,4 @@
+#include "gtest/gtest.h"
 #include <gtest/gtest.h>
 #include <initializer_list>
 #include <stdexcept>
@@ -13,10 +14,9 @@ class VectorT : public testing::Test{
             v = mystl::Vector<T>{100,200,400,120};
         }
 };
-template <typename T>
 class RandomVector: public testing::Test{
     protected:
-        mystl::Vector<T>v;
+        mystl::Vector<int>v;
     public:
         void SetUp() override{
             std::random_device rd;
@@ -27,15 +27,25 @@ class RandomVector: public testing::Test{
             }
         }
 };
-template <typename T>
 class EmptyVector: public testing::Test{
     protected:
-        mystl::Vector<T>v;
+        mystl::Vector<int>v;
     public:
         void SetUp()override{
-            v = mystl::Vector<T>{};
+            v = {};
         }
 };
+template <typename T>
+class VectorTemplate : public testing::Test{
+    protected:
+        std::vector<T>vec;
+    public:
+        void SetUp()override{
+            vec = {T{100},T{120},T{21},T{4}};
+        }
+};
+using types = ::testing::Types<int,long,long long,float,double,unsigned int,signed int>;
+TYPED_TEST_SUITE(VectorTemplate,types);
 TEST(push_testing,Push_back_basicTest){
     Vector<int>v  = {1,2,3,4,5};
     EXPECT_EQ(v.get_size(),5);
@@ -351,6 +361,30 @@ TEST(merge_ReverseTest,MergeReverseUseRanges){
     expected = {100,200,300,6,5,4};
     for(auto x: v){
         actual.push_back(x);
+    }
+    EXPECT_EQ(actual,expected);
+}
+TYPED_TEST(VectorTemplate,PushBackGenericTesting){
+    std::vector<TypeParam>actual,expected;
+    expected = {100,120,21,4};
+    for(int i = 1;i < 50;i++){
+        this->vec.push_back(TypeParam(i));
+        expected.push_back(TypeParam(i));
+    }
+    for(auto x: this->vec){
+        actual.push_back(TypeParam(x));
+    }
+    EXPECT_EQ(actual,expected);
+}
+TYPED_TEST(VectorTemplate,PopBackGenericTesting){
+    std::vector<TypeParam>actual,expected;
+    expected = {100,120,21,4};
+    for(int i = 0;i < 2;i++){
+        this->vec.pop_back();
+        expected.pop_back();
+    }
+    for(auto x: this->vec){
+        actual.push_back(TypeParam(x));
     }
     EXPECT_EQ(actual,expected);
 }
