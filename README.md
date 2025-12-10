@@ -6,7 +6,7 @@
 
 Stree is personal project to develop Vector from sratch with purpose learn memory management,continus allocation and low level,this project have unique challenge because allocation used is continus allocation which have change memory fragmentation occurs.
 
-> ![note]
+> [!note]
 > this project on going develoment
 
 # Requirements
