@@ -78,6 +78,7 @@ class Vector{
             this->size = 0;
             this->arr = element_traits::allocate(alloc,capacity);
         }
+        //constructor initializer list
         Vector(std::initializer_list<T>array){
             this->size = array.size();
             this->capacity = array.size() > 0 ? array.size() : 1;
@@ -89,20 +90,20 @@ class Vector{
             }
         }
         // ranges constructor use Vector<int>(v->this container);
-        // template <std::ranges::input_range R>
-        // Vector(R&& r){
-        //     //declare and initialization cap 2 * ranges size
-        //     grow(r.size() * 2);
-        //     // use size on ranges
-        //     this->size = r.size();
-        //     element_traits::allocate(alloc,capacity);
-        //     // construct element
-        //     int i = 0;
-        //     for(auto it = r.begin();it != r.end();it++,i++){
-        //         element_traits::construct(alloc,std::addressof(arr[i]),*it);
-        //     }
-        // }
-        // // ranges
+        template <std::ranges::input_range R>
+        Vector(R&& r){
+            //declare and initialization cap     2 * ranges size
+            auto n = std::distance(r.begin(),r.end());
+            // use size on ranges
+            arr = element_traits::allocate(alloc,std::ranges::size(r));
+            // construct element
+            int i = 0;
+            for(auto it = r.begin();it != r.end();it++,i++){
+                element_traits::construct(alloc,std::addressof(arr[i]),*it);
+            }
+            this->size = n;
+        }
+        // // iterator constructor
         template<typename It>
         requires my_input_iterator<It>
         Vector(It first,It last){
@@ -118,8 +119,8 @@ class Vector{
                 element_traits::construct(alloc,std::addressof(arr[i]),*it);
             }
         }
-        //copy coppy assignment
-        Vector operator==(const Vector& others){
+        //copy assignment
+        Vector operator=(const Vector& others){
             if(this == &others){
                 return *this;
             }
@@ -131,7 +132,8 @@ class Vector{
                 element_traits::construct(alloc,std::addressof(arr[i]),x);
                 i++;
             }
-        }
+        }      
+        //copy constructor
         Vector(const Vector& others){
             size = others.size;
             capacity = others.capacity;
@@ -139,6 +141,17 @@ class Vector{
             for(int i = 0;i < others.size;i++){
                 element_traits::construct(alloc,std::addressof(arr[i]),others.arr[i]);
             }
+        }
+        //move constructor
+        Vector(const Vector&& others)noexcept{
+            arr = std::move(others.arr);
+        }
+        //move assignment operator
+        Vector& operator=(Vector&& others)noexcept{
+            if(this != &others){
+                arr = std::move(others.arr);
+            }
+            return *this;
         }
         ~Vector(){
             free_storage();
