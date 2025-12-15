@@ -89,19 +89,19 @@ class Vector{
             }
         }
         // ranges constructor use Vector<int>(v->this container);
-        template <std::ranges::input_range R>
-        Vector(R&& r){
-            //declare and initialization cap 2 * ranges size
-            capacity = r.size() * 2;
-            // use size on ranges
-            size = r.size();
-            element_traits::allocate(alloc,capacity);
-            // construct element
-            int i = 0;
-            for(auto it = r.begin();it != r.end();it++,i++){
-                element_traits::construct(alloc,std::addressof(arr[i]),*it);
-            }
-        }
+        // template <std::ranges::input_range R>
+        // Vector(R&& r){
+        //     //declare and initialization cap 2 * ranges size
+        //     grow(r.size() * 2);
+        //     // use size on ranges
+        //     this->size = r.size();
+        //     element_traits::allocate(alloc,capacity);
+        //     // construct element
+        //     int i = 0;
+        //     for(auto it = r.begin();it != r.end();it++,i++){
+        //         element_traits::construct(alloc,std::addressof(arr[i]),*it);
+        //     }
+        // }
         // // ranges
         template<typename It>
         requires my_input_iterator<It>
@@ -172,10 +172,10 @@ class Vector{
                     ++ptr;
                     return temp;
                 }
-                bool operator==(const Iterator& others){
+                bool operator==(const Iterator& others)const{
                     return ptr == others.ptr;
                 }
-                bool operator!=(const Iterator& others){
+                bool operator!=(const Iterator& others)const{
                     return ptr != others.ptr;
                 }
                 const bool operator>(const Iterator& others)const{
@@ -261,6 +261,9 @@ class Vector{
             }
             return arr[pos];
         }
+        T* Data()const noexcept{
+            return arr;
+        }
         T& back()const noexcept{
             return arr[size - 1];
         }
@@ -285,9 +288,6 @@ class Vector{
         }
     public:
         void push_front(const T& value){
-            if(is_full()){
-                throw std::overflow_error("max capacity container reached");
-            }
             if(is_empty()){
                 create_element(0,value);
                 size++;
@@ -303,9 +303,6 @@ class Vector{
             size++;
         }
         void push_front(const T&& value){
-            if(is_full()){
-                throw std::overflow_error("max capacity container reached");
-            }
             if(is_empty()){
                 create_element(0,value);
                 size++;
@@ -321,9 +318,6 @@ class Vector{
             size++;
         }     
         void push_back(const T& value){
-            if(is_full()){
-                throw std::overflow_error("max capacity container reached");
-            }
             if(size == capacity){
                 grow();
             }
@@ -331,9 +325,6 @@ class Vector{
             size++;
         }
         void push_back(const T&& value){
-            if(is_full()){
-                throw std::overflow_error("max capacity container reached");
-            }
             if(size == capacity){
                 grow();
             }
@@ -866,11 +857,6 @@ class Vector{
                 left++;
             }
         }
-        // template <class inputIt>
-        // requires std::input_iterator<inputIt>
-        // Iterator insert_reverse(const_iterator pos,inputIt first,inputIt last){
-            
-        // }
     public:
         void swap(Vector& others)noexcept{
             // swap cap
