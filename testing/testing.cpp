@@ -46,6 +46,22 @@ class VectorTemplate : public testing::Test{
 };
 using types = ::testing::Types<int,long,long long,float,double,unsigned int,signed int>;
 TYPED_TEST_SUITE(VectorTemplate,types);
+
+template <typename T>
+class VectorInvariantFixture : public testing::Test{
+    protected:
+        mystl::Vector<T>vec;
+    public:
+        void assert_invariants(){
+            ASSERT_LE(vec.get_size(),vec.get_capacity()); //les then or equal
+            ASSERT_EQ(vec.end(),vec.begin() + vec.get_size()); //equal
+
+            if(vec.get_capacity() > 0){
+                ASSERT_NE(vec.Data(),nullptr); //not equal
+            }
+        }
+};
+TYPED_TEST_SUITE(VectorInvariantFixture,types);
 TEST(push_testing,Push_back_basicTest){
     Vector<int>v  = {1,2,3,4,5};
     EXPECT_EQ(v.get_size(),5);
@@ -387,4 +403,10 @@ TYPED_TEST(VectorTemplate,PopBackGenericTesting){
         actual.push_back(TypeParam(x));
     }
     EXPECT_EQ(actual,expected);
+}
+TYPED_TEST(VectorInvariantFixture,ExtremeTestPushBack){
+    for(int i = 0;i < 10'000;++i){
+        this->vec.push_back(TypeParam{});
+        this->assert_invariants();
+    }
 }
