@@ -72,6 +72,10 @@ int main(){
 }
 ```
 
+# Issue
+
+if you encounter any issue ,please open an issue and submit a pull request.
+
 # Develoment
 
 [![wakatime](https://wakatime.com/badge/user/04a3154f-bfdc-49e5-b523-80e1a082da81/project/b5c663e4-c9b1-4566-94e6-4e4766d94d60.svg)](https://wakatime.com/badge/user/04a3154f-bfdc-49e5-b523-80e1a082da81/project/b5c663e4-c9b1-4566-94e6-4e4766d94d60)
