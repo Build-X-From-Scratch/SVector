@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # --- Source & header setup ---
 add_executable(implementation implementation/implementation.cpp)
-target_include_directories(implementation PRIVATE header)
+target_include_directories(implementation INTERFACE header)
 
 # --- GoogleTest setup via FetchContent ---
 include(FetchContent)
