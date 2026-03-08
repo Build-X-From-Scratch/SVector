@@ -41,6 +41,7 @@ SOFTWARE.
 #include <stdexcept>
 #include <sys/types.h>
 #include <cassert>
+#include <vector>
 namespace mystl{
 template <typename It>
 concept my_input_iterator = requires(It it) {
@@ -660,6 +661,51 @@ class Vector{
             }
             return Iterator(arr + end);
         }
+    public: //sliding window
+        bool sub_equal(std::size_t count,std::size_t target){
+            //purpose return true if there subarray sum equal to target
+            //use sliding window algorithm
+            //expected O(n)
+            //
+          if(size == 0){
+            return false;
+          }
+          std::size_t sum = 0;
+          for(std::size_t i = 0;i < count;i++){
+            sum += arr + i;
+          }
+          if(sum == target)return true;
+          std::size_t window = sum;
+          for(std::size_t i = count;i < size;i++){
+            window += (arr + i) - (arr + (i - count));
+          }
+          return false;
+
+        }
+        auto sub_max(std::size_t count,std::size_t target) -> std::iter_value_t<Vector>
+        {
+          using value_type = std::iter_value_t<Vector>;
+          using type = std::common_type_t<value_type,std::size_t>;
+          if(size == 0){
+            return 0;
+          }
+          type sum = 0;
+          for(std::size_t i = 0;i < count;i++){
+            sum += arr + i;
+          }
+          type window = sum;
+          type max = 0;
+          for(std::size_t i = count;i < size;i++){
+            window += (arr + i) - (arr + (i - count));
+            max = std::max(max,window);
+          }
+            return max;
+        }
+        //std::vector<std::size_t> max_subarray(std::size_t count,std::size_t target){
+          //if(size == 0)return {};
+          //std::vector<std::size_t>res;
+          //return res;
+        //}
     public:
         /**
         * @brief merge adalah built in function untuk menggabungkan sebuah container dengan object vector diposisi end(arr + size)
